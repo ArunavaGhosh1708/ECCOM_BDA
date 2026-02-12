@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Wishlist - TrendTrove</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/themes/base/jquery-ui.min.css"
+        integrity="sha512-ELV+xyi8IhEApPS/pSj66+Jiw+sOT1Mqkzlh8ExXihe4zfqbWkxPRi8wptXIO9g73FSlhmquFlUOuMSoXz5IRw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css"
+        integrity="sha512-1cK78a1o+ht2JcaW6g8OXYwqpev9+6GqOkz9xmBN9iUUhIndKtxwILGWYOSibOKjLsEdjyjZvYDq/cZwNeak0w=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <%- include('./partials/static-head-elements.ejs') %>
+</head>
+
+<body>
+    <%- include('./partials/header.ejs') %>
+        <div class="site-wrap">
+            <div class="bg-light py-3">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-12 mb-0"><a href="/">Home</a> <span class="mx-2 mb-0">/</span> <strong
+                                class="text-black">Wishlist</strong></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="site-section">
+                <div class="container">
+                    <div class="row mb-5">
+                        <div class="col-md-12">
+                            <div class="row">
+                                <div class="col-md-12 mb-5">
+                                    <div class="float-md-left mb-4">
+                                        <h2 class="text-black h5">Your Wishlist 🥰</h2>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <% if (wishlist && wishlist.length> 0) { %>
+                                <div class="row mb-5">
+                                    <% for (const product of wishlist) { %>
+                                        <% if (product !== null) { %>
+                                            <div class="col-sm-6 col-lg-4 mb-4" data-aos="fade-up">
+                                                <div class="block-4 text-center h-100 d-flex flex-column border">
+                                                    <figure class="block-4-image" style="height:200px">
+                                                        <a href="/products/<%= product.id %>"><img loading="lazy"
+                                                                src="<%= product.imageURL %>" alt="Image placeholder"
+                                                                class="img-fluid h-100 w-100 object-fit-cover"></a>
+                                                    </figure>
+                                                    <div class="block-4-text p-4">
+                                                        <div class="d-flex justify-content-between">
+                                                            <h3>
+                                                                <a href="/products/<%= product.id %>">
+                                                                    <%- product.name %>
+                                                                </a>
+                                                            </h3>
+                                                            <a href="/wishlist/<%= product.id %>/remove" class="text-danger">
+                                                                <i class="icon fa-solid fa-heart like-product"></i>
+                                                            </a>
+                                                        </div>
+                                                        <p class="mb-0">
+                                                            <%= product.shortDescription %>
+                                                        </p>
+                                                        <p class="text-primary font-weight-bold">$<%= product.price %>
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <% } else { %>
+                                            <div class="col-sm-6 col-lg-4 mb-4" data-aos="fade-up">
+                                                <div class="block-4 text-center h-100 d-flex flex-column border">
+                                                    <figure class="block-4-image" style="height:200px">
+                                                        <a><img loading="lazy"
+                                                                src="/images/user_avatar.png" alt="Image placeholder"
+                                                                class="img-fluid h-100 w-100 object-fit-cover"></a>
+                                                    </figure>
+                                                    <div class="block-4-text p-4">
+                                                        <h3>Removed from market</h3>
+                                                        <p class="mb-0">
+                                                            Purchase other items now before they are removed from the market too 😢
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        <% } %>
+                                    <% } %>
+                                </div>
+                            <% } else { %>
+                                <h2 class="text-center my-5">Your wish list is empty 😢</h2>
+                            <% } %>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <%- include("./partials/footer.ejs") %>
+        </div>
+
+        <%- include("./partials/scripts.ejs") %>
+
+</body>
+
+</html>

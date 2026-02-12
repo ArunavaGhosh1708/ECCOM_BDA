@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <%- include('./partials/static-head-elements') %>
+</head>
+
+<body>
+    <main class="site-section text-center">
+        <h1 class="text-danger">
+            <% if (error) { %>
+                <%= error.title %>
+                    <% } else { %> Oops! Something Went Wrong <% } %>
+        </h1>
+        <img class="py-3 h-100" src="https://media.giphy.com/media/9zoe1SFIBd8PPqz5cr/giphy.gif" alt="Error Image">
+        <p class="h4 text-dark">
+
+            <% if (error) { %>
+                <%= error.message %>
+                    <% } else { %>
+                        It seems our server had a little hiccup. Don't worry, our team of highly trained
+                        monkeys is on it.
+                        <% } %>
+        </p>
+        <p>
+            <a href="/">Go back to the home page</a>
+        </p>
+    </main>
+</body>
+
+</html>

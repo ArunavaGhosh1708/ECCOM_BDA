@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Shop - TrendTrove</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.13.2/themes/base/jquery-ui.min.css"
+        integrity="sha512-ELV+xyi8IhEApPS/pSj66+Jiw+sOT1Mqkzlh8ExXihe4zfqbWkxPRi8wptXIO9g73FSlhmquFlUOuMSoXz5IRw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css"
+        integrity="sha512-1cK78a1o+ht2JcaW6g8OXYwqpev9+6GqOkz9xmBN9iUUhIndKtxwILGWYOSibOKjLsEdjyjZvYDq/cZwNeak0w=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <%- include('./partials/static-head-elements.ejs') %>
+</head>
+
+<body>
+    <%- include('./partials/header.ejs') %>
+        <div class="site-wrap">
+            <div class="bg-light py-3">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-12 mb-0"><a href="/">Home</a> <span class="mx-2 mb-0">/</span> <strong
+                                class="text-black">Shop</strong></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="site-section">
+                <div class="container">
+                    <div class="row mb-5">
+                        <div class="col-md-9 order-2">
+
+                            <div class="row">
+                                <div class="col-md-12 mb-5">
+                                    <div class="float-md-left mb-4">
+                                        <h2 class="text-black h5">Shop All</h2>
+                                    </div>
+                                    <div class="d-flex">
+                                        <div class="dropdown me-1 ms-md-auto">
+                                            <button type="button" class="btn btn-secondary btn-sm dropdown-toggle"
+                                                data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                Latest
+                                            </button>
+                                            <div class="dropdown-menu">
+                                                <a class="dropdown-item"
+                                                    href="?size=6&sortBy=createdAt&orderBy=DESC&category=MEN&latest=1">Men</a>
+                                                <a class="dropdown-item"
+                                                    href="?size=6&sortBy=createdAt&orderBy=DESC&category=WOMEN&latest=1">Women</a>
+                                                <a class="dropdown-item"
+                                                    href="?size=6&sortBy=createdAt&orderBy=DESC&category=CHILDREN&latest=1">Children</a>
+                                            </div>
+                                        </div>
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-secondary btn-sm dropdown-toggle"
+                                                data-bs-toggle="dropdown">Reference</button>
+                                            <div class="dropdown-menu">
+                                                <a class="dropdown-item" href="?sortBy=name&orderBy=ASC">Name, A to
+                                                    Z</a>
+                                                <a class="dropdown-item" href="?sortBy=name&orderBy=DESC">Name, Z to
+                                                    A</a>
+                                                <div class="dropdown-divider"></div>
+                                                <a class="dropdown-item" href="?sortBy=price&orderBy=ASC">Price, low
+                                                    to high</a>
+                                                <a class="dropdown-item" href="?sortBy=price&orderBy=DESC">Price, high
+                                                    to low</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <% if (products && products.length> 0) { %>
+                                <div class="row mb-5">
+                                    <% for (const product of products) { %>
+                                        <div class="col-sm-6 col-lg-4 mb-4" data-aos="fade-up">
+                                            <div class="block-4 text-center h-100 d-flex flex-column border">
+                                                <figure class="block-4-image" style="height:200px">
+                                                    <a href="/products/<%= product.id %>"><img loading="lazy"
+                                                        src="<%= product.imageURL %>" alt="<%- product.name %>"
+                                                        class="img-fluid h-100 w-100 object-fit-cover"></a>
+                                                </figure>
+                                                <div class="block-4-text p-4">
+                                                    <div class="d-flex justify-content-between">
+                                                        <h3>
+                                                            <a href="/products/<%= product.id %>">
+                                                                <%- product.name %>
+                                                            </a>
+                                                        </h3>
+                                                        <% if (req.user && req.user.wishlist && req.user.wishlist.includes(parseInt(product.id))) { %>
+                                                            <a href="/wishlist/<%= product.id %>/remove" class="text-danger">
+                                                                    <i class="icon fa-solid fa-heart like-product"></i>
+                                                                </a>
+                                                        <% } else { %>
+                                                            <a href="/wishlist/<%= product.id %>/add">
+                                                                <i class="icon fa-regular fa-heart like-product"></i>
+                                                            </a>
+                                                        <% } %>
+                                                    </div>
+                                                    <p class="mb-0">
+                                                        <%= product.shortDescription %>
+                                                    </p>
+                                                    <p class="text-primary font-weight-bold">$<%= product.price %>
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <% } %>
+                                </div>
+                                <% if (!isLatestProducts) { %>
+                                    <div class="row" data-aos="fade-up">
+                                        <div class="col-md-12 text-center">
+                                            <div class="site-block-27">
+                                                <ul>
+                                                    <% if (currentPage - 1> 0) { %>
+                                                    <li><a href="?page=<%= currentPage - 1 %>
+                                                                 &sortBy=<%= sortBy %>
+                                                                 &orderBy=<%= orderBy %>
+                                                                 <% if (searchCategory) { %>&category=<%= searchCategory %><% } %>
+                                                                 <% if (priceMin) { %>&priceMin=<%= priceMin %><% } %>
+                                                                 <% if (priceMax) { %>&priceMax=<%= priceMax %><% } %>
+                                                                 <% if (searchWord) { %>&q=<%= searchWord %><% } %>
+                                                                 <% if (productSizes) { %>
+                                                                 <% for (const productSize of productSizes) { %>
+                                                                 &productSizes=<%= productSize %>
+                                                                 <% } %>
+                                                                 <% } %>">&lt;</a>
+                                                    </li>
+                                                        <% } %>
+                                                            <% for (let activePage=1; activePage <=totalNoOfPages;
+                                                                activePage++) { %>
+                                                                <a href="?page=<%= activePage %>
+                                                                         &sortBy=<%= sortBy %>
+                                                                         &orderBy=<%= orderBy %>
+                                                                         <% if (searchCategory) { %>&category=<%= searchCategory %><% } %>
+                                                                         <% if (priceMin) { %>&priceMin=<%= priceMin %><% } %>
+                                                                         <% if (priceMax) { %>&priceMax=<%= priceMax %><% } %>
+                                                                         <% if (searchWord) { %>&q=<%= searchWord %><% } %>
+                                                                         <% if (productSizes) { %>
+                                                                         <% for (const productSize of productSizes) { %>
+                                                                         &productSizes=<%= productSize %>
+                                                                         <% } %>
+                                                                         <% } %>">
+                                                                    <li <% if (activePage===currentPage) { %>
+                                                                        class="active" <% } %>
+                                                                            ><span>
+                                                                                <%= activePage %>
+                                                                            </span></li>
+                                                                </a>
+                                                                <% } %>
+                                                                    <% if (currentPage + 1 <=totalNoOfPages) { %>
+                                                                        <li><a href="?page=<%= currentPage + 1 %>
+                                                                                &sortBy=<%= sortBy %>
+                                                                                &orderBy=<%= orderBy %>
+                                                                                <% if (searchCategory) { %>&category=<%= searchCategory %><% } %>
+                                                                                <% if (priceMin) { %>&priceMin=<%= priceMin %><% } %>
+                                                                                <% if (priceMax) { %>&priceMax=<%= priceMax %><% } %>
+                                                                                <% if (searchWord) { %>&q=<%= searchWord %><% } %>
+                                                                                <% if (productSizes) { %>
+                                                                                    <% for (const productSize of productSizes) { %>
+                                                                                        &productSizes=<%= productSize %>
+                                                                                    <% } %>
+                                                                                    <% } %>">&gt;</a>
+                                                                        </li>
+                                                                        <% } %>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <% } %>
+                                        <% } else { %>
+                                            <h2 class="text-center my-5">No products</h2>
+                                            <% } %>
+                        </div>
+
+                        <div class="col-md-3 order-1 mb-5 mb-md-0">
+                            <div class="border p-4 rounded mb-4">
+                                <h3 class="mb-3 h6 text-uppercase text-black d-block">Categories</h3>
+                                <ul class="list-unstyled mb-0">
+                                    <li class="mb-1"><a href="?category=MEN" class="d-flex"><span>Men</span>
+                                            <span class="text-black ms-auto">(<%= categoriesCount.MEN %>)
+                                            </span></a>
+                                    </li>
+                                    <li class="mb-1"><a href="?category=WOMEN" class="d-flex"><span>Women</span> <span
+                                                class="text-black ms-auto">(<%= categoriesCount.WOMEN %>)
+                                            </span></a>
+                                    </li>
+                                    <li class="mb-1"><a href="?category=CHILDREN" class="d-flex"><span>Children</span>
+                                            <span class="text-black ms-auto">(<%= categoriesCount.CHILDREN %>)
+                                            </span></a></li>
+                                </ul>
+                            </div>
+
+                            <div class="border p-4 rounded mb-4">
+                                <form action="/products" method="GET">
+                                    <div class="mb-4">
+                                        <h3 class="mb-3 h6 text-uppercase text-black d-block">Filter by Price</h3>
+                                        <div class="price-input">
+                                            <div class="field me-2">
+                                                <span>Min</span>
+                                                <input type="number" class="input-min"
+                                                    value="<% if (priceMin) { %><%= priceMin %><% } else { %>250<% } %>">
+                                            </div>
+                                            <div class="field ms-2">
+                                                <span>Max</span>
+                                                <input type="number" class="input-max"
+                                                    value="<% if (priceMax) { %><%= priceMax %><% } else { %>750<% } %>">
+                                            </div>
+                                        </div>
+                                        <div class="slider mt-5">
+                                            <div class="progress"></div>
+                                        </div>
+                                        <div class="range-input">
+                                            <input type="range" class="range-min" min="0" name="priceMin" max="1000"
+                                                value="<% if (priceMin) { %><%= priceMin %><% } else { %>250<% } %>"
+                                                step="10">
+                                            <input type="range" class="range-max" min="0" name="priceMax" max="1000"
+                                                value="<% if (priceMax) { %><%= priceMax %><% } else { %>750<% } %>"
+                                                step="10">
+                                        </div>
+                                    </div>
+                                    <div class="mb-4">
+                                        <h3 class="mb-3 h6 text-uppercase text-black d-block">Size</h3>
+                                        <label for="s_sm" class="d-flex">
+                                            <input type="checkbox" id="s_sm" class="me-2 mt-1" name="productSizes"
+                                                value="S" <% if (productSizes && productSizes.includes('S')) { %>
+                                            checked <% } %>>
+                                                <span class="text-black">Small (<%= sizesCount.SMALL %>)</span>
+                                        </label>
+                                        <label for="s_md" class="d-flex">
+                                            <input type="checkbox" id="s_md" class="me-2 mt-1" name="productSizes"
+                                                value="M" <% if (productSizes && productSizes.includes('M')) { %>
+                                            checked <% } %>>
+                                                <span class="text-black">Medium (<%= sizesCount.MEDIUM %>)</span>
+                                        </label>
+                                        <label for="s_lg" class="d-flex">
+                                            <input type="checkbox" id="s_lg" class="me-2 mt-1" name="productSizes"
+                                                value="L" <% if (productSizes && productSizes.includes('L')) { %>
+                                            checked <% } %>>
+                                                <span class="text-black">Large (<%= sizesCount.LARGE %>)</span>
+                                        </label>
+                                    </div>
+                                    <button class="btn btn-primary w-100" type="submit">Apply filters</button>
+                                    <a class="btn btn-secondary w-100 mt-2" type="button" href="/products">Clear
+                                        filters</a>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <%- include("./partials/footer.ejs") %>
+        </div>
+
+        <%- include("./partials/scripts.ejs") %>
+
+</body>
+
+</html>

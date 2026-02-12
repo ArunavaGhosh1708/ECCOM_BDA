@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Admin Dashboard - TrendTrove</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css"
+        integrity="sha512-1cK78a1o+ht2JcaW6g8OXYwqpev9+6GqOkz9xmBN9iUUhIndKtxwILGWYOSibOKjLsEdjyjZvYDq/cZwNeak0w=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <%- include('../partials/static-head-elements.ejs') %>
+</head>
+
+<body>
+    <%- include('../partials/header.ejs') %>
+        <div class="site-wrap">
+            <div class="bg-light py-3">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-12 mb-0"><a href="/">Home</a> <span class="mx-2 mb-0">/</span> <strong
+                                class="text-black">Admin Dashboard</strong></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="site-section border-bottom" data-aos="fade">
+                <div class="container px-4">
+                    <div class="row h-full">
+                        <div class="col-md-4 stretch-card grid-margin mt-2">
+                            <div class="card bg-gradient-info card-img-holder text-white border-0">
+                                <div class="card-body">
+                                    <img src="/images/circle.svg" class="card-img-absolute" alt="circle-image">
+                                    <h4 class="font-weight-normal mb-3">Total Users <i class="mdi mdi-bookmark-outline mdi-24px float-right"></i>
+                                    </h4>
+                                    <h2 class="mb-5">
+                                        <%= totalUsers %>
+                                    </h2>
+                                    <h6 class="card-text">All time users counter</h6>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 stretch-card grid-margin mt-2">
+                            <div class="card bg-gradient-danger card-img-holder text-white border-0">
+                                <div class="card-body">
+                                    <img src="/images/circle.svg" class="card-img-absolute" alt="circle-image">
+                                    <h4 class="font-weight-normal mb-3">Weekly Revenue<i class="mdi mdi-chart-line mdi-24px float-right"></i>
+                                    </h4>
+                                    <h2 class="mb-5">$<%= currentMonthRevenue.toFixed(2) %>
+                                    <h6 class="card-text">This week's sales</h6>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 stretch-card grid-margin mt-2">
+                            <div class="card bg-gradient-success card-img-holder text-white border-0">
+                                <div class="card-body">
+                                    <img src="/images/circle.svg" class="card-img-absolute" alt="circle-image">
+                                    <h4 class="font-weight-normal mb-3">Completed orders<i class="mdi mdi-diamond mdi-24px float-right"></i>
+                                    </h4>
+                                    <h2 class="mb-5">
+                                        <%= currentWeekOrders %>
+                                    </h2>
+                                    <h6 class="card-text">This week's delivered orders</h6>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12 py-5">
+                            <div class="card">
+                                <div class="card-body table-items">
+                                    <div class="d-flex flex-column align-items-center my-3 flex-wrap">
+                                        <h4 class="card-title">Orders (<%= orders.length %>)</h4>
+                                        <p class="card-text">Newly checked out orders (processing)</p>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table class="table align-middle">
+                                            <thead>
+                                                <tr>
+                                                    <th> Order No </th>
+                                                    <th> Total </th>
+                                                    <th> State </th>
+                                                    <th> Items </th>
+                                                    <th> Note from user </th>
+                                                    <th> Mark as delivered </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="ordersTable">
+                                                <% if (orders.length <= 0) { %>
+                                                    <tr>
+                                                        <td><b>No Orders found</b></td>
+                                                    </tr>
+                                                    <% } else { %>
+                                                        <% for (const order of orders) { %>
+                                                            <tr>
+                                                                <td> <%= order.id %>
+                                                                </td>
+                                                                <td>
+                                                                    $<%= order.cartTotal %>
+                                                                </td>
+                                                                <td>
+                                                                    <%= order.state %>
+                                                                </td>
+                                                                <td>
+                                                                    <%= order.CartItems.length %>
+                                                                </td>
+                                                                <td>
+                                                                    <%= order.orderNote ?? '-' %>
+                                                                </td>
+                                                                <td>
+                                                                    <% if (order.state === 'DELIVERED') { %>
+                                                                        <a href="#" type="button" class="btn btn-secondary">
+                                                                            <p class="d-inline">Delivered</p> 
+                                                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                                                                        </a>
+                                                                    <% } else if (order.state === 'PROCESSING') { %>
+                                                                        <a href="/cart/<%= order.id %>/update" type="button" class="btn btn-primary">
+                                                                            <p class="d-inline">Mark</p> 
+                                                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                                                                        </a>
+                                                                    <% } %>
+                                                                </td>
+                                                            </tr>
+
+                                                            <% } %>
+
+                                                                <% } %>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12 py-5">
+                            <div class="card">
+                                <div class="card-body table-items">
+                                    <div class="d-flex flex-column align-items-center my-3 flex-wrap">
+                                        <h4 class="card-title">Products (<%= productCount %>)</h4>
+                                        <div class="row align-items-center justify-content-between w-100">                                            
+                                            <div class="col-6 col-md-4 site-search-icon text-start">
+                                                <form class="site-block-top-search">
+                                                    <i class="icon fa-solid fa-magnifying-glass"></i>
+                                                    <input type="text" class="form-control border-0" placeholder="Search product name" name="qAdminSearchProductName" hx-get="/admin/dashboard/products" hx-trigger="keyup changed delay:500ms" hx-indicator="#indicator" hx-target="#productsTable" />
+                                                </form>
+                                            </div>
+                                            <button class="col-6 col-md-4 btn btn-block btn-lg btn-primary" type="button"
+                                                data-bs-toggle="modal" data-bs-target="#newProductModal">+ Add a
+                                                product</button>
+                                        </div>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table class="table align-middle">
+                                            <thead>
+                                                <tr>
+                                                    <th> Name </th>
+                                                    <th> Price </th>
+                                                    <th> Category </th>
+                                                    <th> Sizes </th>
+                                                    <th> Available </th>
+                                                    <th> Last Updated </th>
+                                                    <th> Edit </th>
+                                                    <th> Delete </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="productsTable">
+                                                <% if (products.length <= 0) { %>
+                                                    <tr>
+                                                        <td><b>No Products found</b></td>
+                                                    </tr>
+                                                    <% } else { %>
+                                                        <% for (const product of products) { %>
+                                                            <tr 
+                                                                <% if (products.indexOf(product) + 1 === products.length && currentPage) { %> 
+                                                                hx-get="/admin/dashboard/products?page=<%= currentPage + 1 %>&qAdminSearchProductName=<%= qAdminSearchProductName %>"
+                                                                    hx-trigger="intersect once"
+                                                                    hx-target="#productsTable"
+                                                                    hx-swap="beforeend"
+                                                                    hx-indicator="#indicator"
+                                                                <% } %>>
+
+                                                                <td>
+                                                                    <img src="<%= product.imageURL %>" class="me-2"
+                                                                        alt="image">
+                                                                    <%- product.name %>
+                                                                </td>
+                                                                <td> $<%= product.price %>
+                                                                </td>
+                                                                <td>
+                                                                    <%= product.category %>
+                                                                </td>
+                                                                <td>
+                                                                    <% if (product.sizes) { %>
+                                                                        <%= product.sizes.join(', ') %> <% } %>
+                                                                </td>
+                                                                <td>
+                                                                    <% if (product.available) { %>
+                                                                        <label class="badge bg-gradient-success"> Yes
+                                                                        </label>
+                                                                        <% } else { %>
+                                                                            <label class="badge bg-gradient-danger"> No
+                                                                            </label>
+                                                                            <% } %>
+                                                                </td>
+                                                                <td>
+                                                                    <%= product.updatedAt.toGMTString() %>
+                                                                </td>
+                                                                <td>
+                                                                    <a href="#" hx-get="/products/<%= product.id %>/update" hx-trigger="click" hx-swap="innerHTML" hx-target="#update-product-modal-body"  type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#updateProductModal">
+                                                                        <svg xmlns="http://www.w3.org/2000/svg"
+                                                                            width="16" height="16" fill="currentColor"
+                                                                            class="bi bi-pencil-square"
+                                                                            viewBox="0 0 16 16">
+                                                                            <path
+                                                                                d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
+                                                                            <path fill-rule="evenodd"
+                                                                                d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z" />
+                                                                        </svg>
+                                                                    </a>
+                                                                </td>
+                                                                <td>
+                                                                    <a href="/products/<%= product.id %>/delete" type="button" class="btn btn-primary">
+                                                                        <svg xmlns="http://www.w3.org/2000/svg"
+                                                                            width="16" height="16" fill="currentColor"
+                                                                            class="bi bi-trash3-fill"
+                                                                            viewBox="0 0 16 16">
+                                                                            <path
+                                                                                d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5Zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5ZM4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06Zm6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528ZM8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5Z" />
+                                                                        </svg>
+                                                                    </a>
+                                                                </td>
+                                                            </tr>
+
+                                                            <% } %>
+
+                                                                <% } %>
+                                            </tbody>
+                                        </table>
+                                        <section class="row justify-content-center table-spinner">
+                                            <div class="htmx-indicator lds-ellipsis" id="indicator">
+                                                <div></div><div></div><div></div><div></div>
+                                            </div>
+                                        </section>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-12 py-5">
+                            <div class="card">
+                                <div class="card-body table-items">
+                                    <div class="d-flex flex-column align-items-center my-3 flex-wrap">
+                                        <h4 class="card-title">Coupons (<%= couponCount %>)</h4>
+                                        <div class="row align-items-center justify-content-between w-100">                                            
+                                            <div class="col-6 col-md-4 site-search-icon text-start">
+                                                <form class="site-block-top-search">
+                                                    <i class="icon fa-solid fa-magnifying-glass"></i>
+                                                    <input type="text" class="form-control border-0" placeholder="Search coupon code" name="qAdminSearchCouponCode" hx-get="/admin/dashboard/coupons" hx-trigger="keyup changed delay:500ms" hx-indicator="#indicator" hx-target="#couponsTable" />
+                                                </form>
+                                            </div>
+                                            <button class="col-6 col-md-4 btn btn-block btn-lg btn-primary" type="button"
+                                                data-bs-toggle="modal" data-bs-target="#newCouponModal">+ Add a
+                                                coupon</button>
+                                        </div>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table class="table align-middle">
+                                            <thead>
+                                                <tr>
+                                                    <th> Code </th>
+                                                    <th> Amount </th>
+                                                    <th> Usage </th>
+                                                    <th> Max Usage </th>
+                                                    <th> Last Updated </th>
+                                                    <th> Edit </th>
+                                                    <th> Delete </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="couponsTable">
+                                                <% if (coupons.length <= 0) { %>
+                                                    <tr>
+                                                        <td><b>No Coupons found</b></td>
+                                                    </tr>
+                                                    <% } else { %>
+                                                        <% for (const coupon of coupons) { %>
+                                                            <tr 
+                                                                <% if (coupons.indexOf(coupon) + 1 === coupons.length && currentPage) { %> 
+                                                                hx-get="/admin/dashboard/coupons?page=<%= currentPage + 1 %>&qAdminSearchCouponCode =<%= qAdminSearchCouponCode  %>"
+                                                                    hx-trigger="intersect once"
+                                                                    hx-target="#couponsTable"
+                                                                    hx-swap="beforeend"
+                                                                    hx-indicator="#indicator"
+                                                                <% } %>>
+
+                                                                <td> <%= coupon.code %>
+                                                                </td>
+                                                                <td>
+                                                                    $<%= coupon.amount %>
+                                                                </td>
+                                                                <td>
+                                                                    <%= coupon.usage %>
+                                                                </td>
+                                                                <td>
+                                                                    <%= coupon.maxUsage %>
+                                                                </td>
+                                                                <td>
+                                                                    <%= coupon.updatedAt.toGMTString() %>
+                                                                </td>
+                                                                <td>
+                                                                    <a href="#" hx-get="/coupons/<%= coupon.id %>/update" hx-trigger="click" hx-swap="innerHTML" hx-target="#update-coupon-modal-body" type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#updateCouponModal">
+                                                                        <svg xmlns="http://www.w3.org/2000/svg"
+                                                                            width="16" height="16" fill="currentColor"
+                                                                            class="bi bi-pencil-square"
+                                                                            viewBox="0 0 16 16">
+                                                                            <path
+                                                                                d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
+                                                                            <path fill-rule="evenodd"
+                                                                                d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z" />
+                                                                        </svg>
+                                                                    </a>
+                                                                </td>
+                                                                <td>
+                                                                    <a href="/coupons/<%= coupon.id %>/delete" type="button" class="btn btn-primary">
+                                                                        <svg xmlns="http://www.w3.org/2000/svg"
+                                                                            width="16" height="16" fill="currentColor"
+                                                                            class="bi bi-trash3-fill"
+                                                                            viewBox="0 0 16 16">
+                                                                            <path
+                                                                                d="M11 1.5v1h3.5a.5.5 0 0 1 0 1h-.538l-.853 10.66A2 2 0 0 1 11.115 16h-6.23a2 2 0 0 1-1.994-1.84L2.038 3.5H1.5a.5.5 0 0 1 0-1H5v-1A1.5 1.5 0 0 1 6.5 0h3A1.5 1.5 0 0 1 11 1.5Zm-5 0v1h4v-1a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5ZM4.5 5.029l.5 8.5a.5.5 0 1 0 .998-.06l-.5-8.5a.5.5 0 1 0-.998.06Zm6.53-.528a.5.5 0 0 0-.528.47l-.5 8.5a.5.5 0 0 0 .998.058l.5-8.5a.5.5 0 0 0-.47-.528ZM8 4.5a.5.5 0 0 0-.5.5v8.5a.5.5 0 0 0 1 0V5a.5.5 0 0 0-.5-.5Z" />
+                                                                        </svg>
+                                                                    </a>
+                                                                </td>
+                                                            </tr>
+
+                                                            <% } %>
+
+                                                                <% } %>
+                                            </tbody>
+                                        </table>
+                                        <section class="row justify-content-center table-spinner">
+                                            <div class="htmx-indicator lds-ellipsis" id="indicator">
+                                                <div></div><div></div><div></div><div></div>
+                                            </div>
+                                        </section>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Update Product Modal using Htmx -->
+            <div class="modal fade" id="updateProductModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="updateProductModalLabel">Update Product</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <section id="update-product-modal-body">
+                    </section>
+                </div>
+                </div>
+            </div>
+
+            <!-- Update Coupon Modal using Htmx -->
+            <div class="modal fade" id="updateCouponModal" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="updateCouponModalLabel">Update Coupon</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <section id="update-coupon-modal-body">
+                    </section>
+                </div>
+                </div>
+            </div>
+
+            <!-- New Product Modal -->
+            <div class="modal fade" id="newProductModal" tabindex="-1" aria-labelledby="newProductModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="newProductModalLabel">Add a new product</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form action="/products" method="POST" enctype="multipart/form-data">
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label for="name" class="form-label">Name</label>
+                                    <input type="text" class="form-control" name="name" id="name"
+                                        placeholder="Enter product name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="price" class="form-label">Price</label>
+                                    <input type="number" class="form-control" name="price" id="price"
+                                        placeholder="Enter product price" step="any" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="category" class="form-label">Category</label>
+                                    <select class="form-select" name="category" id="category" required>
+                                        <option value="">Choose the product category</option>
+                                        <% for (const category of productCategories) { %>
+                                            <option value="<%= category %>">
+                                                <%= category %>
+                                            </option>
+                                            <% } %>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="sizes" class="form-label">Sizes</label>
+                                    <% for (const [value, size] of Object.entries(productSizes)) { %>
+                                        <div class="form-check text-black">
+                                            <input class="form-check-input" type="checkbox" value="<%= value %>"
+                                                id="<%= value %>" name="sizes">
+                                            <label class="form-check-label" for="<%= value %>">
+                                                <%= size %>
+                                            </label>
+                                        </div>
+                                        <% } %>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="shortDescription" class="form-label">Short Description</label>
+                                    <input type="text" class="form-control" name="shortDescription"
+                                        id="shortDescription" placeholder="Enter short description" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="longDescription" class="form-label">Long Description</label>
+                                    <textarea class="form-control" name="longDescription" id="longDescription" rows="3"
+                                        placeholder="Enter long description"></textarea>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="availability" class="form-label">Available?</label>
+                                    <select class="form-select" aria-label="Product availability select input"
+                                        name="available" required>
+                                        <option value="1" selected>Yes</option>
+                                        <option value="0">No</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="productImageInput" class="form-label"> Upload product image</label>
+                                    <input class="form-control" type="file" name="image" id="productImageInput"
+                                        required>
+                                    <label class="form-label small font-italic text-muted">JPG or PNG no larger than 5
+                                        MB</label>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-primary">Save changes</button>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- New Coupon Modal -->
+            <div class="modal fade" id="newCouponModal" tabindex="-1" aria-labelledby="newCouponModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h1 class="modal-title fs-5" id="newCouponModalLabel">Create a coupon</h1>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <form action="/coupons" method="POST">
+                            <div class="modal-body">
+                                <div class="mb-3">
+                                    <label for="name" class="form-label">Code</label>
+                                    <input type="text" class="form-control" name="code" id="code"
+                                        placeholder="Enter coupon name" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="price" class="form-label">Amount ($)</label>
+                                    <input type="number" class="form-control" name="amount" id="price"
+                                        placeholder="Enter coupon price" step="any" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="category" class="form-label">Max Usage</label>
+                                    <input type="number" class="form-control" name="maxUsage" id="price"
+                                        placeholder="Enter coupon max usage" step="any" required>
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="submit" class="btn btn-primary">Create</button>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <%- include("../partials/footer.ejs") %>
+            <%- include("../partials/scripts.ejs") %>
+                    <script src="https://unpkg.com/htmx.org@1.9.8" integrity="sha384-rgjA7mptc2ETQqXoYC3/zJvkU7K/aP44Y+z7xQuJiVnB/422P/Ak+F/AqFR7E4Wr" crossorigin="anonymous"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Product - TrendTrove</title>
+
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css"
+        integrity="sha512-1cK78a1o+ht2JcaW6g8OXYwqpev9+6GqOkz9xmBN9iUUhIndKtxwILGWYOSibOKjLsEdjyjZvYDq/cZwNeak0w=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+    <%- include('./partials/static-head-elements.ejs') %>
+
+</head>
+
+<body>
+    <%- include('./partials/header.ejs') %>
+        <div class="site-wrap">
+            <div class="bg-light py-3">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-12 mb-0">
+                            <a href="/">Home</a> <span class="mx-2 mb-0">/</span>
+                            <a href="/products">Shop</a> <span class="mx-2 mb-0">/</span> <strong class="text-black">
+                                <%- product.name %>
+                            </strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="site-section">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <img src="<%= product.imageURL %>" alt="Image" class="img-fluid">
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-between">
+                                <h2 class="text-black">
+                                    <%- product.name %>
+                                </h2>
+                                <% if (req.user && req.user.wishlist?.includes(parseInt(product.id))) { %>
+                                    <a href="/wishlist/<%= product.id %>/remove" class="text-danger">
+                                        <i class="icon fa-solid fa-heart like-product"></i>
+                                    </a>
+                                <% } else { %>
+                                    <a href="/wishlist/<%= product.id %>/add">
+                                        <i class="icon fa-regular fa-heart like-product"></i>
+                                    </a>
+                                <% } %>
+                            </div>
+                            <p>
+                                <%- product.shortDescription %>
+                            </p>
+                            <% if (product.longDescription) { %>
+                                <p>
+                                    <%- product.longDescription %>
+                                </p>
+                                <% } %>
+                                    <form method="POST" action="/cart/product/<%= product.id %>/create">
+                                        <p><strong class="text-primary h4">$<%= product.price %></strong></p>
+                                        <p class="text-primary mb-0">Sizes</p>
+                                        <div class="mb-1 d-flex">
+                                            <% if (product.sizes) { %>
+                                                <% for (const size of product.sizes) { %>
+
+                                                    <label for="<%= size %>" class="d-flex me-3 mb-3">
+                                                        <span class="d-inline-block me-2"
+                                                            style="top:-2px; position: relative;"><input type="radio"
+                                                                id="<%= size %>" name="size" value="<%= size %>"
+                                                                required></span>
+                                                        <span class="d-inline-block text-black">
+                                                            <%= size %>
+                                                        </span>
+                                                    </label>
+                                                    <% } %>
+                                                        <% } %>
+                                        </div>
+                                        <div class="mb-5">
+                                            <div class="input-group mb-3" style="max-width: 150px;">
+                                                <div class="input-group-prepend">
+                                                    <button class="btn btn-outline-primary js-btn-minus"
+                                                        type="button">&minus;</button>
+                                                </div>
+                                                <input type="number" class="form-control text-center mx-2" value="1"
+                                                    min="1" name="quantity">
+                                                <div class="input-group-append">
+                                                    <button class="btn btn-outline-primary js-btn-plus"
+                                                        type="button">&plus;</button>
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                        <% if (product.available) { %>
+                                            <p><button type="submit" class="buy-now btn btn-sm btn-primary">Add To
+                                                    Cart</button></p>
+                                            <% } else {%>
+                                                <p><button class="buy-now btn btn-sm btn-outline">Out of Stock</button>
+                                                </p>
+                                                <% } %>
+                                    </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <%- include('./partials/footer.ejs') %>
+        </div>
+        <%- include("./partials/scripts.ejs") %>
+
+</body>
+
+</html>

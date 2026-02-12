@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Cart - TrendTrove</title>
+    <%- include('../partials/static-head-elements.ejs') %>
+
+</head>
+
+<body>
+    <%- include('../partials/header.ejs') %>
+        <div class="site-wrap">
+            <div class="bg-light py-3">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-12 mb-0"><a href="/">Home</a> <span class="mx-2 mb-0">/</span> <strong
+                                class="text-black">Cart</strong></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="site-section">
+                <div class="container">
+                    <div class="row mb-5">
+                        <form class="col-md-12" method="post">
+                            <div class="site-blocks-table">
+                                <table class="table cartTable table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th class="product-thumbnail">Image</th>
+                                            <th class="product-name">Product</th>
+                                            <th class="product-price">Price</th>
+                                            <th class="product-size">Size</th>
+                                            <th class="product-quantity">Quantity</th>
+                                            <th class="product-total">Total</th>
+                                            <th class="product-remove">Remove</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <% if (cartItems.length <= 0 ) { %>
+                                            <tr>
+                                                <td colspan='7'><h2>No items in your cart. Go shopping 🛒</h2></td>
+                                            </tr>                        
+                                        <% } %>
+
+                                        <% for (const cartItem of cartItems) { %>
+                                            <tr data-itemId="<%= cartItem.id %>">
+                                                <td class="product-thumbnail">
+                                                    <img src="<%= cartItem.Product.imageURL %>" alt="Image"
+                                                        class="img-fluid">
+                                                </td>
+                                                <td class="product-name">
+                                                    <h2 class="h5 text-black">
+                                                        <%- cartItem.Product.name %>
+                                                    </h2>
+                                                </td>
+                                                <td>$<%= cartItem.Product.price %>
+                                                </td>
+                                                <td>
+                                                    <select class="form-select">
+                                                        <% for (const [shortFormSize, longFormSize] of
+                                                            Object.entries(PRODUCT_SIZES)) { %>
+                                                            <option value="<%= shortFormSize %>" <% if
+                                                                (cartItem.size===shortFormSize) { %>selected <% } %>>
+                                                                    <%= longFormSize %>
+                                                            </option>
+                                                            <% } %>
+                                                    </select>
+
+                                                </td>
+                                                <td>
+                                                    <div class="input-group mb-3" style="max-width: 150px;">
+                                                        <input type="number" class="form-control text-center mx-2"
+                                                            value="<%= cartItem.quantity %>" min="1">
+                                                    </div>
+
+                                                </td>
+                                                <td>$<%= cartItem.totalPrice %>
+                                                </td>
+                                                <td>
+                                                    <a href="/cart/product/<%= cartItem.id %>/delete"
+                                                        class="btn btn-primary btn-sm delete-cartItem"><i
+                                                            class="fa-solid fa-trash"></i></a>
+                                                </td>
+                                            </tr>
+                                            <% } %>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="row mb-5">
+                                <div class="col-md-6 mb-3 mb-md-0">
+                                    <button class="btn btn-primary btn-sm btn-block" id="updateCart">Update
+                                        Cart</button>
+                                </div>
+                                <div class="col-md-6">
+                                    <a href="/products"><button
+                                            class="btn btn-outline-primary btn-sm btn-block">Continue
+                                            Shopping</button></a>
+                                </div>
+                            </div>
+                            <form class="row" method="POST" action="/cart/coupon/add">
+                                <div class="col-md-12">
+                                    <label class="text-black h4" for="coupon">Coupon</label>
+                                    <p>Enter your coupon code if you have one (it would overwrite a previous coupon).
+                                    </p>
+                                </div>
+                                <div class="col-md-8 mb-3 mb-md-0">
+                                    <input type="text" class="form-control py-3" id="coupon" placeholder="Coupon Code"
+                                        name="couponCode">
+                                </div>
+                                <div class="col-md-4">
+                                    <button class="btn btn-primary btn-sm">Apply Coupon</button>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="col-md-6 ps-5">
+                            <div class="row justify-content-end">
+                                <div class="col-md-7" id="cartTotals">
+                                    <div class="row">
+                                        <div class="col-md-12 text-end border-bottom mb-5">
+                                            <h3 class="text-black h4 text-uppercase">Cart Totals</h3>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <span class="text-black">Subtotal</span>
+                                        </div>
+                                        <div class="col-md-6 text-end">
+                                            <strong class="text-black">$<%= cartTotal %></strong>
+                                        </div>
+                                    </div>
+                                    <% if (cartCoupon) { %>
+                                        <div class="row mb-3">
+                                            <div class="col-md-6">
+                                                <span class="text-black">Coupon (<%= cartCoupon.code %>)</span>
+                                            </div>
+                                            <div class="col-md-6 text-end">
+                                                <strong class="text-black">$-<%= cartCoupon.amount %></strong>
+                                            </div>
+                                        </div>
+                                        <% } %>
+                                            <div class="row mb-5">
+                                                <div class="col-md-6">
+                                                    <span class="text-black">Total</span>
+                                                </div>
+                                                <div class="col-md-6 text-end">
+                                                    <% if (cartCoupon && (cartTotal> cartCoupon.amount)) { %>
+                                                        <strong class="text-black">$<%= (cartTotal - cartCoupon.amount).toFixed(2) %>
+                                                        </strong>
+                                                        <% } else { %>
+                                                            <strong class="text-black">$<%= cartTotal %></strong>
+                                                            <% } %>
+                                                </div>
+                                            </div>
+
+                                            <div class="row">
+                                                <div class="col-md-12">
+                                                    <a href='/cart/checkout'><button
+                                                            class="btn btn-primary btn-lg py-3 btn-block">Proceed To
+                                                            Checkout</button></a>
+                                                </div>
+                                            </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <%- include('../partials/footer.ejs') %>
+        </div>
+        <%- include("../partials/scripts.ejs") %>
+
+
+</body>
+
+</html>

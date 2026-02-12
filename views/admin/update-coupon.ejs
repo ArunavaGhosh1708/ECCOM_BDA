@@ -1,0 +1,24 @@
+<form method="post" action="/coupons/<%= coupon.id %>/update">
+    <div class="modal-body">
+        <div class="mb-3">
+            <label for="name" class="form-label">Name</label>
+            <input type="text" class="form-control" name="code" id="code" placeholder="Enter coupon code"
+                value="<%- coupon.code %>" required>
+        </div>
+        <div class="mb-3">
+            <label for="amount" class="form-label">Amount</label>
+            <input type="number" class="form-control" name="amount" id="amount" placeholder="Enter coupon amount"
+                value="<%= coupon.amount %>" step="any" required>
+        </div>
+        <div class="mb-3">
+            <label for="maxUsage" class="form-label">Max Usage</label>
+            <input type="number" class="form-control" name="maxUsage" id=""amount" placeholder="Enter coupon max usage"
+                value="<%= coupon.maxUsage %>" required>
+        </div>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="submit" class="btn btn-primary">Save
+            changes</button>
+    </div>
+</form>

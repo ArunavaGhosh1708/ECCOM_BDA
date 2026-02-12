@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>User Profile - TrendTrove</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css"
+        integrity="sha512-1cK78a1o+ht2JcaW6g8OXYwqpev9+6GqOkz9xmBN9iUUhIndKtxwILGWYOSibOKjLsEdjyjZvYDq/cZwNeak0w=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <%- include('../partials/static-head-elements.ejs') %>
+</head>
+
+<body>
+    <%- include('../partials/header.ejs') %>
+        <div class="site-wrap">
+            <div class="bg-light py-3">
+                <div class="container">
+                    <div class="row">
+                        <div class="col-md-12 mb-0"><a href="/">Home</a> <span class="mx-2 mb-0">/</span> <strong
+                                class="text-black">Profile Page</strong></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="site-section border-bottom" data-aos="fade">
+                <div class="container px-4">
+                    <div class="row">
+                        <div class="col-xl-4">
+                            <div class="card mb-4 mb-xl-0">
+                                <div class="card-header">Profile Picture</div>
+                                <div class="card-body text-center">
+                                    <% if (req.user.profileImageURL) { %>
+                                        <img class="img-account-profile rounded-circle mb-2 w-50"
+                                            src="<%= req.user.profileImageURL %>" alt="Profile Image">
+                                        <% } else { %>
+                                            <img class="img-account-profile rounded-circle mb-2 w-50"
+                                                src="/images/user_avatar.png" alt="Profile Image placeholder">
+                                            <% } %>
+                                                <form action="/user/profile/img-upload" method="POST"
+                                                    enctype="multipart/form-data">
+                                                    <label for="uploadImgInput"
+                                                        class="form-label small font-italic text-muted">JPG or PNG no
+                                                        larger
+                                                        than
+                                                        5 MB</label>
+                                                    <input class=" form-control form-control-lg mb-4 btn-outline"
+                                                        type="file" id="uploadImgInput" name="image">
+                                                    <button id="uploadProfileImgBtn" class="btn btn-primary"
+                                                        type="submit">Upload new
+                                                        image</button>
+
+                                                </form>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-8">
+                            <div class="card mb-4">
+                                <div class="card-header">Account Details</div>
+                                <div class="card-body">
+                                    <form method="POST" action="/user/profile">
+                                        <div class="mb-3">
+                                            <label class="small mb-1" for="name">Full name</label>
+                                            <input class="form-control" id="name" type="text" name="name"
+                                                placeholder="Enter your full name" value="<%= req.user.name %>"
+                                                required>
+                                        </div>
+                                        <div class=" row gx-3 mb-3">
+                                            <div class="col-md-6">
+                                                <label class="small mb-1" for="email">Email</label>
+                                                <input class="form-control" id="email" type="email" name="email"
+                                                    placeholder="Enter your email" value="<%= req.user.email %>"
+                                                    title="Email cannot be changed. Contact the admin for support at emmanueltopea@gmail.com"
+                                                    disabled>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="small mb-1" for="inputPhone">Phone number</label>
+                                                <input class="form-control" id="inputPhone" type="tel"
+                                                    placeholder="Enter your phone number" name="phoneNumber"
+                                                    value="<%= req.user.phoneNumber %>" required>
+                                            </div>
+
+                                        </div>
+                                        <div class="row gx-3 mb-3">
+                                            <div class="col-md-6">
+                                                <label class="small mb-1" for="streetAddress">Street</label>
+                                                <input class="form-control" id="streetAddress" type="text"
+                                                    placeholder="Enter your street address" name="street"
+                                                    value="<% if (req.user.Address) { %><%= req.user.Address.street %> <% } %>"
+                                                    required>
+                                            </div>
+                                            <div class="col-md-6">
+                                                <label class="small mb-1" for="state">State</label>
+                                                <input class="form-control" id="state" type="text" name="state"
+                                                    placeholder="Enter your state"
+                                                    value="<% if (req.user.Address) { %><%= req.user.Address.state %> <% } %>"
+                                                    required>
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <div><label class="small mb-1" for="country">Country</label></div>
+                                            <select class="form-select form-control" id="country" name="country"
+                                                required>
+                                                <% if (req.user.Address) { %>
+                                                    <option value="<%= req.user.Address.country %>">
+                                                        Current:
+                                                        <%= req.user.Address.country %>
+                                                    </option>
+                                                    <% } else { %>
+                                                        <option value="">Select a Country</option>
+                                                        <% } %>
+                                                            <option value="Nigeria">Nigeria</option>
+                                                            <option value="United States">United States</option>
+                                                            <option value="United Kingdom">United Kingdom</option>
+                                            </select>
+                                        </div>
+                                        <button class="btn btn-primary" type="submit">Save changes</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-12 py-5">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center my-3 flex-wrap">
+                                        <h4 class="card-title">Your 5 most recent orders/carts (History)</h4>
+                                    </div>
+                                    <div class="table-responsive">
+                                        <table class="table align-middle">
+                                            <thead>
+                                                <tr>
+                                                    <th> #No </th>
+                                                    <th> State </th>
+                                                    <th> Address </th>
+                                                    <th> Coupon </th>
+                                                    <th> Cart Total (without coupon) </th>
+                                                    <th> Products </th>
+                                                    <th> Clear items </th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <% if (!carts) { %>
+                                                    <tr>
+                                                        <td><b>No Carts found</b></td>
+                                                    </tr>
+                                                    <% } else { %>
+                                                        <% for (const cart of carts) { %>
+                                                            <tr>
+                                                                <td>
+                                                                    #<%= cart.id %>
+                                                                </td>
+                                                                <td>
+                                                                    <p><%= cart.state %></p>
+                                                                    <% if (cart.state === 'PENDING') { %>
+                                                                        <b>(your current cart)</b>
+                                                                    <% } %>
+                                                                </td>
+                                                                <td>
+                                                                    <% if (cart.address) { %>
+                                                                        <%= cart.address %>
+                                                                    <% } else { %>
+                                                                        None
+                                                                    <% } %>
+                                                                </td>
+                                                                <td>
+                                                                    <% if (cart.Coupon) { %>
+                                                                        <label class="badge bg-gradient-success">
+                                                                            $<%= cart.Coupon.amount %>
+                                                                        </label>
+                                                                    <% } else { %>
+                                                                        <label class="badge bg-gradient-danger"> None
+                                                                        </label>
+                                                                    <% } %>
+                                                                </td>
+                                                                <td>$<%= cart.cartTotal %></td>
+                                                                <td>
+                                                                    <%= cart.productNames ? cart.productNames: '---' %>
+                                                                </td>
+                                                                <td>
+                                                                    <% if (cart.state === 'PENDING' && cart.productNames !== '') { %>
+                                                                        <a href="/cart/<%= cart.id %>/clear" class="btn btn-primary" title='Clear cart items'>
+                                                                            <i class="fa-solid fa-trash"></i>
+                                                                        </a>
+                                                                    <% } else { %>
+                                                                        <a class="btn btn-outline" title='Cart cannot be cleared'>
+                                                                            <i class="fa-solid fa-circle-xmark"></i>
+                                                                        </a>
+                                                                    <% } %>
+                                                                </td>
+                                                            </tr>
+
+                                                            <% } %>
+
+                                                                <% } %>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <%- include("../partials/footer.ejs") %>
+                <%- include("../partials/scripts.ejs") %>
+
+</body>
+
+</html>

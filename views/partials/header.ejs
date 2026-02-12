@@ -1,0 +1,84 @@
+<header class="site-navbar" role="banner">
+    <div class="site-navbar-top">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-6 col-md-4 order-2 order-md-1 site-search-icon text-start">
+                    <form action="/products" method="GET" class="site-block-top-search">
+                        <i class="icon fa-solid fa-magnifying-glass"></i>
+                        <input type="text" class="form-control border-0" placeholder="Search product name" name="q" <% if (searchWord != undefined || searchWord != null) { %> value=<%= searchWord %> <% } %> />
+                    </form>
+                </div>
+
+                <div class="col-12 mb-3 mb-md-0 col-md-4 order-1 order-md-2 text-center">
+                    <div class="site-logo">
+                        <a href="/" class="js-logo-clone">TrendTrove Wears</a>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-4 order-3 order-md-3 mt-3 m-md-0 text-end">
+                    <div class="site-top-icons">
+                        <ul>
+                            <li>
+                                <a href="/user/profile"><i class="icon fa-solid fa-user"></i></a>
+                            </li>
+                            <li>
+                                <a href="/wishlist" class="icon-count">
+				    <i class="icon fa-regular fa-heart"></i>
+                                    <i class="count">
+                                        <% if (req.user) { %>
+                                            <%= req.user.wishlistCount %>
+                                                <% } else { %>
+                                                    x
+                                                    <% } %>
+                                    </i>
+				</a>
+                            </li>
+                            <li>
+                                <a href="/cart" class="icon-count ">
+                                    <i class="icon fa-solid fa-cart-shopping"></i>
+                                    <i class="count">
+                                        <% if (req.user) { %>
+                                            <%= req.user.cartItemsCount %>
+                                                <% } else { %>
+                                                    x
+                                                    <% } %>
+                                    </i>
+                                </a>
+                            </li>
+                            <li class="d-inline-block d-md-none ms-md-0">
+                                <a href="#" class="site-menu-toggle js-menu-toggle"><i class="fa-solid fa-bars"></i></a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="site-navigation text-end  text-md-center" role="navigation">
+        <div class="container">
+            <ul class="site-menu js-clone-nav d-none d-md-block">
+                <li class="active"><a href="/">Home</a></li>
+                <li><a href="/about">About</a></li>
+                <li><a href="/products">Shop</a></li>
+                <% if (!req.isAuthenticated() ) { %>
+                    <li><a href="/auth/login">Login</a></li>
+                    <li><a href="/auth/signup">Signup</a></li>
+                    <% } else { %>
+
+                        <% if (req.user.role==='admin' ) { %>
+                            <li><a href="/admin/dashboard">Dashboard</a></li>
+                            <% } %>
+                                <li><a href="/auth/logout">Logout(<%- req.user.name %>)</a></li>
+                                <% } %>
+            </ul>
+        </div>
+    </nav>
+    <% if (flashMessages) { %>
+        <% flashMessages.forEach((flashedMessage)=> { %>
+            <div class="container alert alert-<%= flashedMessage.type %>" role="alert">
+                <%= flashedMessage.message %>
+            </div>
+            <% }) %>
+                <% } %>
+</header>

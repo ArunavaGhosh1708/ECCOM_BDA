@@ -1,0 +1,4 @@
+Trendtrove Wears
+
+A customer cart has just been payed for.
+Go to your admin dashboard to view it.

@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <title>New Placed Order - TrendTrove</title>
+
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css"
+            integrity="sha512-1cK78a1o+ht2JcaW6g8OXYwqpev9+6GqOkz9xmBN9iUUhIndKtxwILGWYOSibOKjLsEdjyjZvYDq/cZwNeak0w=="
+            crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <%- include('../partials/static-head-elements.ejs') %>
+        <style>
+            :root {
+                --font-family-sans-serif: 'Mukta', -apple-system, BlinkMacSystemFont,
+                    'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif,
+                    'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol',
+                    'Noto Color Emoji';
+                --font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas,
+                    'Liberation Mono', 'Courier New', monospace;
+            }
+            a {
+                color: #7971ea;
+                text-decoration: none;
+                background-color: transparent;
+                transition: 0.3s all ease;
+                -webkit-text-decoration-skip: objects;
+                -webkit-transition: 0.3s all ease;
+                -o-transition: 0.3s all ease;
+            }
+            body {
+                line-height: 1.7;
+                color: #8c92a0;
+                font-weight: 300;
+                font-size: 16px;
+                margin: 0;
+                font-family: 'Mukta', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+                    'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji',
+                    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+            }
+                        
+            .bcart-top {
+                bcart-top: 1px solid #edf0f5 !important;
+            }
+            .site-navbar .site-logo a {
+                text-transform: uppercase;
+                color: #25262a;
+                letter-spacing: 0.2em;
+                font-size: 20px;
+                padding-left: 10px;
+                padding-right: 10px;
+                bcart: 2px solid #25262a;
+            }
+            .site-navbar .site-logo a:hover {
+                text-decoration: none;
+            }
+            .site-navbar a {
+                color: #868995;
+            }
+            .site-navbar a:hover {
+                color: #3d3f45;
+            }
+            .site-navbar {
+                background: #fff;
+                margin-bottom: 0px;
+                z-index: 1999;
+            }
+
+            .site-navbar .site-navbar-top {
+                bcart-bottom: 1px solid #f3f3f4;
+                padding-top: 20px;
+                padding-bottom: 20px;
+                margin-bottom: 0px;
+            }
+            @media (min-width: 768px) {
+                .site-navbar .site-navbar-top {
+                    padding-top: 40px;
+                    padding-bottom: 40px;
+                }
+            }
+
+            .site-section {
+                padding: 1.5em 0;
+            }
+            @media (min-width: 768px) {
+                .site-section {
+                    padding: 2em 0;
+                }
+            }
+
+            .btn {
+                text-transform: uppercase;
+                position: relative;
+                -webkit-transition: 0.2s all ease-in-out !important;
+                -o-transition: 0.2s all ease-in-out !important;
+                transition: 0.2s all ease-in-out !important;
+                top: 0;
+                letter-spacing: 0.05em;
+            }
+            .btn:hover,
+            .btn:active,
+            .btn:focus {
+                outline: 0;
+                -webkit-box-shadow: 0 0 0 0.2rem rgba(121, 113, 234, 0.25);
+                box-shadow: 0 0 0 0.2rem rgba(121, 113, 234, 0.25);
+            }
+                        
+            .btn.btn-sm {
+                font-size: 14px !important;
+                padding: 10px 20px !important;
+            }
+            .btn-primary {
+                font-size: 17px;
+                font-weight: 300;
+                letter-spacing: 0.2em;
+                color: #fff;
+                background-color: #7971ea;
+                bcart-color: #7971ea;
+            }
+            .btn:hover {
+                -webkit-box-shadow: 0 5px 20px -7px rgba(0, 0, 0, 0.9) !important;
+                box-shadow: 0 5px 20px -7px rgba(0, 0, 0, 0.9) !important;
+                top: -2px;
+            }
+
+            .btn-primary:hover {
+                color: #fff;
+                background-color: #5a50e5;
+                bcart-color: #4f45e3;
+            }
+            .btn-primary.focus,
+            .btn-primary:focus {
+                -webkit-box-shadow: 0 0 0 0.2rem rgba(121, 113, 234, 0.5);
+                box-shadow: 0 0 0 0.2rem rgba(121, 113, 234, 0.5);
+            }
+            .btn-primary.disabled,
+            .btn-primary:disabled {
+                color: #fff;
+                background-color: #7971ea;
+                bcart-color: #7971ea;
+            }
+            .btn-primary:not(:disabled):not(.disabled).active,
+            .btn-primary:not(:disabled):not(.disabled):active,
+            .show > .btn-primary.dropdown-toggle {
+                color: #fff;
+                background-color: #4f45e3;
+                bcart-color: #4539e2;
+            }
+            .btn-primary:not(:disabled):not(.disabled).active:focus,
+            .btn-primary:not(:disabled):not(.disabled):active:focus,
+            .show > .btn-primary.dropdown-toggle:focus {
+                -webkit-box-shadow: 0 0 0 0.2rem rgba(121, 113, 234, 0.5);
+                box-shadow: 0 0 0 0.2rem rgba(121, 113, 234, 0.5);
+            }
+
+            .text-primary {
+                color: #7971ea !important;
+            }
+            a.text-primary:focus,
+            a.text-primary:hover {
+                color: #e43939 !important;
+            }
+
+            .site-blocks-table thead th {
+                padding: 30px;
+                text-align: center;
+                border-width: 1px !important;
+                vertical-align: middle;
+                color: #212529;
+                font-size: 18px;
+            }
+            .site-blocks-table td {
+                padding: 20px;
+                text-align: center;
+                vertical-align: middle;
+                color: #212529;
+            
+            .site-blocks-table tbody tr:first-child td {
+                border-top: 1px solid #7971ea !important;
+            }
+
+            .block-5 ul,
+            .block-5 ul li {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+                line-height: 1.5;
+            }
+
+            .block-5 ul li {
+                padding-left: 30px;
+                position: relative;
+                margin-bottom: 15px;
+                color: #25262a;
+            }
+            .block-5 ul li:before {
+                top: 0;
+                font-family: 'Font Awesome 6 free';
+                font-weight: 900;
+                content: '';
+                position: absolute;
+                left: 0;
+                font-size: 20px;
+                line-height: 1;
+                color: #7971ea;
+            }
+            .block-5 ul li.address:before {
+                content: '\f3c5';
+            }
+            .block-5 ul li.email:before {
+                content: '\f0e0';
+            }
+            .block-5 ul li.phone:before {
+                content: '\f095';
+            }
+
+            .site-footer {
+                padding: 4em 0;
+            }
+            .site-footer ul li {
+                margin-bottom: 10px;
+            }
+            .site-footer ul li a {
+                color: #5c626e;
+            }
+            .site-footer ul li a:hover {
+                color: #7971ea;
+            }
+            .site-footer .footer-heading {
+                font-size: 20px;
+                color: #25262a;
+            }
+        </style>
+    </head>
+
+    <body>
+        <header class="site-navbar" role="banner">
+            <div class="site-navbar-top">
+                <div class="container">
+                    <div class="row justify-content-center align-items-center">
+                        <div class="col-12 mb-3 text-center">
+                            <div class="site-logo">
+                                <a href="<%= APP_DOMAIN %>" class="js-logo-clone">TrendTrove Wears</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="site-section">
+            <div class="container">
+                <div class="row">
+                    <div class="col-md-12 text-center">
+                        <h2 class="display-3 text-black">Thank you for shopping with us!</h2>
+                        <p class="lead mb-5">Your cart has been delivered succesfully.</p>
+                        
+                        <div class="container">
+                          <div class="row">
+                            <div class="col-md-12">
+                              <h2 class="text-primary">Here's your Invoice</h2>
+                              <table class="table site-blocks-table">
+                                <thead>
+                                  <tr>
+                                    <th>Product Name</th>
+                                    <th>Quantity</th>
+                                    <th>Price</th>
+                                    <th>Total</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  <% for (const cartItem of cartItems) { %>
+                                  <tr>
+                                    <td><%- cartItem.Product.name %></td>
+                                    <td><%= cartItem.quantity %></td>
+                                    <td>$<%= cartItem.Product.price %></td>
+                                    <td>$<%= cartItem.totalPrice %></td>
+                                  </tr>
+                                  <% } %>
+                                </tbody>
+                                <tfoot>
+                                  <% if (cart.Coupon) { %> 
+                                  <tr>
+                                    <td colspan="3">
+                                        <strong>Coupon:</strong>
+                                    </td>
+                                    <td><strong>-$<%= cart.Coupon.amount %></strong></td> 
+                                  </tr>
+                                  <% }  %>
+                                  <tr>
+                                    <td colspan="3">
+                                        <strong>Grand Total:</strong>
+                                    </td>
+                                    <% if (cart.Coupon) { %> 
+                                        <td><strong>$<%= (cart.cartTotal - cart.Coupon.amount).toFixed(2) %></strong></td> 
+                                    <% } else { %>
+                                        <td><strong>$<%= cart.cartTotal %></strong></td> 
+                                    <% } %>
+
+                                  </tr>
+                                </tfoot>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="site-footer border-top">
+            <div class="container">
+                <div>
+                    <div>
+                        <div class="block-5 mb-5">
+                            <h3 class="footer-heading mb-4">Contact Info</h3>
+                            <ul class="list-unstyled">
+                                <li class="address">My address here - it's a side project</li>
+                                <li class="phone"><a href="tel://07014364771">+234 701 4364 771</a></li>
+                                <li class="email">emmanueltopea@gmail.com</li>
+                            </ul>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </footer>
+    </body>
+
+</html>
