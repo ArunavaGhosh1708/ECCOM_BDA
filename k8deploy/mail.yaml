@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mail-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mail-service
+  template:
+    metadata:
+      labels:
+        app: mail-service
+    spec:
+      containers:
+        - name: mail
+          image: trendtrove-mail:local
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - secretRef:
+                name: trendtrove-secrets
+            - configMapRef:
+                name: trendtrove-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mail-service
+spec:
+  selector:
+    app: mail-service
+  ports:
+    - port: 3000
+      targetPort: 3000

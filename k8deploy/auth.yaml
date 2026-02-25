@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trendtrove-auth
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: trendtrove-auth
+  template:
+    metadata:
+      labels:
+        app: trendtrove-auth
+    spec:
+      containers:
+        - name: auth
+          image: trendtrove-auth:local
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - secretRef:
+                name: trendtrove-secrets
+            - configMapRef:
+                name: trendtrove-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+spec:
+  selector:
+    app: trendtrove-auth
+  ports:
+    - port: 3000
+      targetPort: 3000

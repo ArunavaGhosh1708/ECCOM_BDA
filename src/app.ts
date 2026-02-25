@@ -4,6 +4,7 @@ import passport from 'passport';
 import session from 'express-session';
 import { appConfig, sessionConfig } from './config';
 import authRouter from './routes/authRoute';
+import setupPassport from './auth/passportSetup';
 import userRouter from './routes/userRoute';
 import bodyParser from 'body-parser';
 import type { IRequestWithFlashMessages } from './types/requestTypes';
@@ -19,6 +20,7 @@ import couponRouter from './routes/couponRoute';
 import wishlistRouter from './routes/wishlistRoute';
 import db from './database';
 import cors from 'cors';
+import telemetryMiddleware from './middlewares/telemetryMiddleware';
 
 const app: Application = express();
 
@@ -33,7 +35,9 @@ app.use(express.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static('public'));
 app.use(session(sessionConfig));
+app.use(telemetryMiddleware);
 
+setupPassport();
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -64,10 +68,30 @@ app.get('/', async (_req: Request, res: Response, next: NextFunction) => {
     }
 });
 
-app.use('/auth', authRouter);
+if (appConfig.AUTH_SERVICE_URL) {
+    app.use('/auth', (req, res) => {
+        res.redirect(`${appConfig.AUTH_SERVICE_URL}${req.originalUrl}`);
+    });
+} else {
+    app.use('/auth', authRouter);
+}
 app.use('/user', ensureLoggedInMiddleware, userRouter);
-app.use('/products', productRouter);
-app.use('/cart', ensureLoggedInMiddleware, cartRouter);
+
+if (appConfig.PRODUCT_SERVICE_URL) {
+    app.use('/products', (req, res) => {
+        res.redirect(`${appConfig.PRODUCT_SERVICE_URL}${req.originalUrl}`);
+    });
+} else {
+    app.use('/products', productRouter);
+}
+
+if (appConfig.CART_SERVICE_URL) {
+    app.use('/cart', (req, res) => {
+        res.redirect(`${appConfig.CART_SERVICE_URL}${req.originalUrl}`);
+    });
+} else {
+    app.use('/cart', ensureLoggedInMiddleware, cartRouter);
+}
 app.use('/wishlist', ensureLoggedInMiddleware, wishlistRouter);
 app.use(
     '/coupons',

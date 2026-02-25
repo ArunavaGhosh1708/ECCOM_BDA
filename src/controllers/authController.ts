@@ -8,6 +8,8 @@ import { setFlashMessage } from '../utilities';
 import db from '../database';
 import mailerConfig from '../config/mailerConfig';
 import { UserRoleEnum } from '../types/models/userTypes';
+import { logTelemetry } from '../telemetry/logger';
+import type { RequestWithTelemetry } from '../types/telemetry';
 
 const User = db.users;
 
@@ -24,7 +26,7 @@ export function getSignup(
 }
 
 export async function postSignup(
-    req: IRequestWithUserSignupForm,
+    req: IRequestWithUserSignupForm & RequestWithTelemetry,
     res: Response,
     next: NextFunction
 ): Promise<void> {
@@ -65,6 +67,20 @@ export async function postSignup(
             type: 'success',
             message: `Account created!. We've reserved a space for you in our store :) `,
         });
+        logTelemetry(
+            req,
+            res,
+            'INFO',
+            'user_session',
+            'user.signup',
+            `User ${email} signed up`,
+            {
+                user_session: {
+                    auth_method: 'password',
+                    device_type: 'web',
+                },
+            }
+        );
         res.redirect('/auth/login');
     } catch (error) {
         next(error);
@@ -72,7 +88,7 @@ export async function postSignup(
 }
 
 export function getLogin(
-    req: Request,
+    req: RequestWithTelemetry,
     res: Response,
     next: NextFunction
 ): void {
@@ -88,7 +104,7 @@ export function getLogin(
 }
 
 export function getLogout(
-    req: IRequestWithAuthenticatedUser,
+    req: IRequestWithAuthenticatedUser & RequestWithTelemetry,
     res: Response,
     next: NextFunction
 ): void {
@@ -97,6 +113,20 @@ export function getLogout(
             if (err !== undefined) {
                 next(err);
             }
+            logTelemetry(
+                req,
+                res,
+                'INFO',
+                'user_session',
+                'user.logout',
+                'User logged out',
+                {
+                    user_session: {
+                        auth_method: 'password',
+                        device_type: 'web',
+                    },
+                }
+            );
             res.redirect('/products');
         });
     } catch (error) {

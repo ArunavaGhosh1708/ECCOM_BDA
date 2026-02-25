@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trendtrove-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: trendtrove-app
+  template:
+    metadata:
+      labels:
+        app: trendtrove-app
+    spec:
+      containers:
+        - name: app
+          image: trendtrove-app:local
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - secretRef:
+                name: trendtrove-secrets
+            - configMapRef:
+                name: trendtrove-config
+          env:
+            - name: AUTH_SERVICE_URL
+              value: http://your-domain.local
+            - name: PRODUCT_SERVICE_URL
+              value: http://your-domain.local
+            - name: CART_SERVICE_URL
+              value: http://your-domain.local
+            - name: MAIL_SERVICE_URL
+              value: http://mail-service:3000
+          env:
+            - name: AUTH_SERVICE_URL
+              value: http://your-domain.local
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-service
+spec:
+  selector:
+    app: trendtrove-app
+  ports:
+    - port: 3000
+      targetPort: 3000

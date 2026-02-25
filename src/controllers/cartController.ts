@@ -15,6 +15,8 @@ import { setFlashMessage } from '../utilities';
 import { appConfig } from '../config';
 import type { CouponAttributes } from '../types/models/couponTypes';
 import { sendEmail } from '../mailer';
+import { logTelemetry } from '../telemetry/logger';
+import type { RequestWithTelemetry } from '../types/telemetry';
 
 const stripe = require('stripe')(appConfig.STRIPE_API_KEY);
 
@@ -25,7 +27,7 @@ const Coupon = db.coupons;
 const User = db.users;
 
 export async function getCart(
-    req: IRequestWithAuthenticatedUser,
+    req: IRequestWithAuthenticatedUser & RequestWithTelemetry,
     res: Response,
     next: NextFunction
 ): Promise<void> {
@@ -51,6 +53,22 @@ export async function getCart(
             cartTotal: userActiveCart.cartTotal,
             cartCoupon,
         });
+        logTelemetry(
+            req,
+            res,
+            'INFO',
+            'cart_checkout',
+            'cart.viewed',
+            'Cart viewed',
+            {
+                cart_checkout: {
+                    cart_id: userActiveCart.id?.toString(),
+                    item_count: cartItems.length,
+                    cart_value: Math.round(userActiveCart.cartTotal * 100),
+                    currency: 'USD',
+                },
+            }
+        );
     } catch (error) {
         console.log(error.message);
         next(error);
@@ -58,7 +76,7 @@ export async function getCart(
 }
 
 export async function addProductToCart(
-    req: IRequestWithAuthenticatedUser,
+    req: IRequestWithAuthenticatedUser & RequestWithTelemetry,
     res: Response,
     next: NextFunction
 ): Promise<void> {
@@ -110,6 +128,26 @@ export async function addProductToCart(
             message: `Item has been added to your cart successfully!`,
             type: 'success',
         });
+        logTelemetry(
+            req,
+            res,
+            'INFO',
+            'cart_checkout',
+            'cart.item.added',
+            'Item added to cart',
+            {
+                cart_checkout: {
+                    cart_id: userActiveCart.id?.toString(),
+                    product_id: product.id?.toString(),
+                    item_count: userActiveCart.CartItems?.length ?? 1,
+                    cart_value: Math.round(
+                        (userActiveCart.cartTotal + cartItemTotal) * 100
+                    ),
+                    currency: 'USD',
+                    quantity_delta: quantity,
+                },
+            }
+        );
         res.redirect('back');
     } catch (error) {
         console.log(error.message, error);
@@ -118,7 +156,7 @@ export async function addProductToCart(
 }
 
 export async function updateCartState(
-    req: IRequestWithAuthenticatedUser,
+    req: IRequestWithAuthenticatedUser & RequestWithTelemetry,
     res: Response,
     next: NextFunction
 ): Promise<void> {
@@ -171,6 +209,20 @@ export async function updateCartState(
             message: 'Order completed succesfully!',
             type: 'success',
         });
+        logTelemetry(
+            req,
+            res,
+            'INFO',
+            'cart_checkout',
+            'checkout.step.reached',
+            'Cart marked delivered',
+            {
+                cart_checkout: {
+                    cart_id: cartId,
+                    checkout_step: 'complete',
+                },
+            }
+        );
         res.redirect('back');
     } catch (err) {
         console.log(err);
@@ -179,7 +231,7 @@ export async function updateCartState(
 }
 
 export async function removeProductFromCart(
-    req: IRequestWithAuthenticatedUser,
+    req: IRequestWithAuthenticatedUser & RequestWithTelemetry,
     res: Response,
     next: NextFunction
 ): Promise<void> {
@@ -226,6 +278,26 @@ export async function removeProductFromCart(
             message: 'Item removed from your cart successfully!',
             type: 'success',
         });
+        logTelemetry(
+            req,
+            res,
+            'INFO',
+            'cart_checkout',
+            'cart.item.removed',
+            'Item removed from cart',
+            {
+                cart_checkout: {
+                    cart_id: userActiveCart.id?.toString(),
+                    product_id: cartItem?.productId?.toString(),
+                    item_count: userActiveCart.CartItems?.length ?? 0,
+                    cart_value: Math.round(
+                        (userActiveCart.cartTotal - cartItem.totalPrice) * 100
+                    ),
+                    currency: 'USD',
+                    quantity_delta: -1,
+                },
+            }
+        );
         res.redirect('back');
     } catch (error) {
         console.log(error.message, error);
@@ -234,7 +306,7 @@ export async function removeProductFromCart(
 }
 
 export async function updateCart(
-    req: IRequestWithAuthenticatedUser,
+    req: IRequestWithAuthenticatedUser & RequestWithTelemetry,
     res: Response,
     next: NextFunction
 ): Promise<void> {
@@ -270,6 +342,22 @@ export async function updateCart(
             message: 'Cart updated successfully!',
             type: 'success',
         });
+        logTelemetry(
+            req,
+            res,
+            'INFO',
+            'cart_checkout',
+            'cart.item.updated',
+            'Cart items updated',
+            {
+                cart_checkout: {
+                    cart_id: userActiveCart.id?.toString(),
+                    item_count: Object.keys(cartItemsUpdate).length,
+                    cart_value: Math.round(cartTotal * 100),
+                    currency: 'USD',
+                },
+            }
+        );
         res.redirect('back');
     } catch (error) {
         console.log(error.message);
@@ -278,7 +366,7 @@ export async function updateCart(
 }
 
 export async function getClearCart(
-    req: IRequestWithAuthenticatedUser,
+    req: IRequestWithAuthenticatedUser & RequestWithTelemetry,
     res: Response,
     next: NextFunction
 ): Promise<void> {
@@ -314,6 +402,22 @@ export async function getClearCart(
             message: 'Cart cleared successfully!',
             type: 'success',
         });
+        logTelemetry(
+            req,
+            res,
+            'INFO',
+            'cart_checkout',
+            'cart.cleared',
+            'Cart cleared',
+            {
+                cart_checkout: {
+                    cart_id: userActiveCart.id?.toString(),
+                    item_count: 0,
+                    cart_value: 0,
+                    currency: 'USD',
+                },
+            }
+        );
         res.redirect('back');
     } catch (err) {
         console.log(err);
@@ -322,7 +426,7 @@ export async function getClearCart(
 }
 
 export async function addCouponToCart(
-    req: IRequestWithAuthenticatedUser,
+    req: IRequestWithAuthenticatedUser & RequestWithTelemetry,
     res: Response,
     next: NextFunction
 ): Promise<void> {
@@ -380,6 +484,21 @@ export async function addCouponToCart(
             message: 'Coupon added succesfully!',
             type: 'success',
         });
+        logTelemetry(
+            req,
+            res,
+            'INFO',
+            'cart_checkout',
+            'cart.coupon.applied',
+            'Coupon applied',
+            {
+                cart_checkout: {
+                    cart_id: userActiveCart.id?.toString(),
+                    coupon_code: coupon.code.slice(0, 3) + '***',
+                    cart_value: Math.round(userActiveCart.cartTotal * 100),
+                },
+            }
+        );
         res.redirect('back');
     } catch (error) {
         console.log(error);
@@ -389,7 +508,7 @@ export async function addCouponToCart(
 }
 
 export async function getCheckout(
-    req: IRequestWithAuthenticatedUser,
+    req: IRequestWithAuthenticatedUser & RequestWithTelemetry,
     res: Response,
     next: NextFunction
 ): Promise<void> {
@@ -423,6 +542,22 @@ export async function getCheckout(
             coupon: userActiveCart.Coupon,
             cartTotal: userActiveCart.cartTotal,
         });
+        logTelemetry(
+            req,
+            res,
+            'INFO',
+            'cart_checkout',
+            'checkout.initiated',
+            'Checkout initiated',
+            {
+                cart_checkout: {
+                    cart_id: userActiveCart.id?.toString(),
+                    item_count: cartItems.length,
+                    cart_value: Math.round(userActiveCart.cartTotal * 100),
+                    currency: 'USD',
+                },
+            }
+        );
     } catch (err) {
         console.log(err);
         next(err);
@@ -430,7 +565,7 @@ export async function getCheckout(
 }
 
 export async function postCheckout(
-    req: IRequestWithAuthenticatedUser,
+    req: IRequestWithAuthenticatedUser & RequestWithTelemetry,
     res: Response,
     next: NextFunction
 ): Promise<void> {
@@ -501,6 +636,24 @@ export async function postCheckout(
             success_url: `${appConfig.APP_DOMAIN}/cart/checkout/success`,
             cancel_url: `${appConfig.APP_DOMAIN}/cart/checkout/cancel`,
         });
+        logTelemetry(
+            req,
+            res,
+            'INFO',
+            'payment_fraud',
+            'payment.initiated',
+            'Stripe checkout session created',
+            {
+                payment_fraud: {
+                    payment_id: checkoutSession.id,
+                    gateway: 'stripe',
+                    payment_method: 'card',
+                    amount: Math.round(userActiveCart.cartTotal * 100),
+                    currency: 'usd',
+                    order_id: userActiveCart.id?.toString(),
+                },
+            }
+        );
         res.redirect(303, checkoutSession.url);
     } catch (err) {
         console.log(err);
@@ -509,7 +662,7 @@ export async function postCheckout(
 }
 
 export async function getCheckoutSuccess(
-    req: IRequestWithAuthenticatedUser,
+    req: IRequestWithAuthenticatedUser & RequestWithTelemetry,
     res: Response,
     next: NextFunction
 ): Promise<void> {
@@ -553,7 +706,26 @@ export async function getCheckoutSuccess(
             textFilePath: successfulCheckoutAdminTextFilePath,
             htmlFilePath: successfulCheckoutAdminHtmlFilePath,
             htmlData: { APP_DOMAIN: appConfig.APP_DOMAIN },
+            req,
         });
+        logTelemetry(
+            req,
+            res,
+            'INFO',
+            'payment_fraud',
+            'payment.succeeded',
+            'Checkout succeeded',
+            {
+                payment_fraud: {
+                    payment_id: userActiveCart.id?.toString(),
+                    gateway: 'stripe',
+                    amount: Math.round(userActiveCart.cartTotal * 100),
+                    currency: 'usd',
+                    gateway_status: 'succeeded',
+                    order_id: userActiveCart.id?.toString(),
+                },
+            }
+        );
         res.render('cart/success');
     } catch (err) {
         console.log(err);

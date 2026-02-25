@@ -10,22 +10,46 @@ const baseConfig: SessionOptions = {
     cookie: { secure: false, maxAge: ONE_WEEK },
 };
 
-const productionConfig: SessionOptions = {
-    ...baseConfig,
-    cookie: {
-        ...baseConfig.cookie,
-        secure: true,
-    },
-};
-if (process.env.NODE_ENV === 'production') {
-    productionConfig.store = MongoStore.create({
+const config: SessionOptions = { ...baseConfig };
+
+if (process.env.MONGO_URI) {
+    config.store = MongoStore.create({
         mongoUrl: process.env.MONGO_URI,
         dbName: 'trendtrove-session-db',
         stringify: true,
     });
 }
 
-const config: SessionOptions =
-    process.env.NODE_ENV === 'production' ? productionConfig : baseConfig;
+if (process.env.NODE_ENV === 'production') {
+    config.cookie = {
+        ...config.cookie,
+        secure: true,
+    };
+}
+
+if (process.env.SESSION_COOKIE_SECURE) {
+    config.cookie = {
+        ...config.cookie,
+        secure: process.env.SESSION_COOKIE_SECURE === 'true',
+    };
+}
+
+if (process.env.SESSION_COOKIE_DOMAIN) {
+    config.cookie = {
+        ...config.cookie,
+        domain: process.env.SESSION_COOKIE_DOMAIN,
+    };
+}
+
+if (process.env.SESSION_COOKIE_SAME_SITE) {
+    config.cookie = {
+        ...config.cookie,
+        sameSite: process.env.SESSION_COOKIE_SAME_SITE as
+            | 'lax'
+            | 'strict'
+            | 'none'
+            | boolean,
+    };
+}
 
 export default config;
