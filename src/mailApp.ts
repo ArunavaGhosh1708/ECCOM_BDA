@@ -3,6 +3,8 @@ import bodyParser from 'body-parser';
 import { sendEmailLocal } from './mailer';
 import appErrorHandlerMiddleware from './middlewares/appErrorHandlerMiddleware';
 import telemetryMiddleware from './middlewares/telemetryMiddleware';
+import { logTelemetry } from './telemetry/logger';
+import type { RequestWithTelemetry } from './types/telemetry';
 
 const app = express();
 
@@ -57,6 +59,34 @@ app.post('/notify/email', async (req, res, next) => {
     } catch (err) {
         next(err);
     }
+});
+
+// Chaos log endpoint
+app.get('/chaos/log', (req: RequestWithTelemetry, res) => {
+    const allowed = ['DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'] as const;
+    const level =
+        (req.query.level as string | undefined)?.toUpperCase() ??
+        ('INFO' as const);
+    const finalLevel = allowed.includes(level as any)
+        ? (level as typeof allowed[number])
+        : 'INFO';
+    const category = (req.query.category as string) ?? 'system';
+    const event =
+        (req.query.event as string) ?? `chaos.${finalLevel.toLowerCase()}`;
+    const message =
+        (req.query.message as string) ??
+        `Chaos log ${finalLevel.toLowerCase()} from mail`;
+
+    logTelemetry(
+        req as any,
+        res,
+        finalLevel,
+        category as any,
+        event,
+        message,
+        {}
+    );
+    res.json({ status: 'ok', level: finalLevel, category, event });
 });
 
 app.use((req, res) => {

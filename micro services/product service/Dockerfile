@@ -12,6 +12,9 @@ RUN npm ci
 # Copy source code
 COPY . .
 
+# Build TypeScript -> dist
+RUN npm run build
+
 # Expose port
 EXPOSE 3000
 
@@ -26,8 +29,8 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install production dependencies only
-RUN npm ci --only=production
+# Install dependencies (dev deps needed for build)
+RUN npm ci
 
 # Copy built application
 COPY --from=development /app/dist ./dist

@@ -21,6 +21,8 @@ import wishlistRouter from './routes/wishlistRoute';
 import db from './database';
 import cors from 'cors';
 import telemetryMiddleware from './middlewares/telemetryMiddleware';
+import { logTelemetry } from './telemetry/logger';
+import type { RequestWithTelemetry } from './types/telemetry';
 
 const app: Application = express();
 
@@ -108,6 +110,34 @@ app.use(
 
 app.get('/about', (req, res) => {
     res.render('about');
+});
+
+// Chaos log endpoint (no side effects, logs only)
+app.get('/chaos/log', (req: RequestWithTelemetry, res: Response) => {
+    const allowed = ['DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'] as const;
+    const level =
+        (req.query.level as string | undefined)?.toUpperCase() ??
+        ('INFO' as const);
+    const finalLevel = allowed.includes(level as any)
+        ? (level as typeof allowed[number])
+        : 'INFO';
+    const category = (req.query.category as string) ?? 'system';
+    const event =
+        (req.query.event as string) ?? `chaos.${finalLevel.toLowerCase()}`;
+    const message =
+        (req.query.message as string) ??
+        `Chaos log ${finalLevel.toLowerCase()} from app`;
+
+    logTelemetry(
+        req,
+        res,
+        finalLevel,
+        category as any,
+        event,
+        message,
+        {}
+    );
+    res.json({ status: 'ok', level: finalLevel, category, event });
 });
 
 app.use((req, res) => {

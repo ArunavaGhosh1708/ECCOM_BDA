@@ -3,15 +3,18 @@ import { appConfig } from './config';
 import db from './database';
 import cartApp from './cartApp';
 
-(async () => {
+async function bootstrap(): Promise<void> {
     try {
         await db.sequelize.authenticate();
-        console.log('📖[Database] connected succesfully!');
-    } catch (err) {
-        console.log('[DB Connection Error]:', err);
-    }
-})();
+        console.log('[Database] connected succesfully!');
 
-cartApp.listen(appConfig.PORT, () => {
-    console.log(`🛒 [Cart Server] listening on port ${appConfig.PORT}`);
-});
+        cartApp.listen(appConfig.PORT, () => {
+            console.log(`[Cart Server] listening on port ${appConfig.PORT}`);
+        });
+    } catch (err) {
+        console.error('[Cart Startup Error]:', err);
+        process.exit(1);
+    }
+}
+
+void bootstrap();

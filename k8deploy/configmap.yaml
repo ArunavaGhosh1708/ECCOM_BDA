@@ -3,9 +3,9 @@ kind: ConfigMap
 metadata:
   name: trendtrove-config
 data:
-  NODE_ENV: production
-  APP_DOMAIN: http://your-domain.local
-  GOOGLE_CALLBACK_URL: http://your-domain.local/auth/google/callback
+  NODE_ENV: development
+  APP_DOMAIN: http://127.0.0.1.nip.io
+  GOOGLE_CALLBACK_URL: http://127.0.0.1.nip.io/auth/google/callback
   SESSION_COOKIE_SECURE: "false"
-  SESSION_COOKIE_DOMAIN: your-domain.local
+  SESSION_COOKIE_DOMAIN: 127.0.0.1.nip.io
   SESSION_COOKIE_SAME_SITE: lax

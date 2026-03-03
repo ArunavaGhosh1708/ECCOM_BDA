@@ -2,9 +2,12 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: trendtrove
+  annotations:
+    kubernetes.io/ingress.class: nginx
 spec:
+  ingressClassName: nginx
   rules:
-    - host: your-domain.local
+    - host: 127.0.0.1.nip.io
       http:
         paths:
           - path: /auth

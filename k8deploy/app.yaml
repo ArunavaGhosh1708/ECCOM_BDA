@@ -24,16 +24,13 @@ spec:
                 name: trendtrove-config
           env:
             - name: AUTH_SERVICE_URL
-              value: http://your-domain.local
+              value: http://auth-service:3000
             - name: PRODUCT_SERVICE_URL
-              value: http://your-domain.local
+              value: http://product-service:3000
             - name: CART_SERVICE_URL
-              value: http://your-domain.local
+              value: http://cart-service:3000
             - name: MAIL_SERVICE_URL
               value: http://mail-service:3000
-          env:
-            - name: AUTH_SERVICE_URL
-              value: http://your-domain.local
 ---
 apiVersion: v1
 kind: Service

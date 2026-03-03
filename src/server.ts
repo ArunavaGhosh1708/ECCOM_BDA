@@ -1,33 +1,29 @@
 import 'dotenv/config';
 import { appConfig } from './config';
-
 import app from './app';
 import db from './database';
 import { mailer } from './mailer';
 import { initializeDatabase } from './database/seedService';
 
-(async () => {
-    await db.sequelize.sync({ alter: true });
-    console.log('📖[Database] connected succesfully!');
-
-    // Initialize database with seed data if needed
+async function bootstrap(): Promise<void> {
     try {
+        await db.sequelize.authenticate();
+        await db.sequelize.sync({ alter: true });
+        console.log('[Database] connected succesfully!');
+
         await initializeDatabase();
+
+        await mailer.verify();
+        console.log('Server is ready to send mails');
+
+        app.listen(appConfig.PORT, () => {
+            console.log(`[Server] listening on port ${appConfig.PORT}`);
+        });
     } catch (err) {
-        console.error('[Database Init Error]:', err);
-        // Non-fatal: application continues to start
+        console.error('[Startup Error]:', err);
+        // Exit so Kubernetes restarts the pod when dependencies (e.g., Postgres) are not yet reachable.
+        process.exit(1);
     }
-})().catch((err) => {
-    console.log('[DB Connection Error]:', err);
-});
+}
 
-(async () => {
-    await mailer.verify();
-    console.log('📭 Server is ready to send mails');
-})().catch((err) => {
-    console.log('[Mailer Connection Error]:', err);
-});
-
-app.listen(appConfig.PORT, () => {
-    console.log(`🔥[Server] listening on port ${appConfig.PORT}`);
-});
+void bootstrap();

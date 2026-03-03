@@ -11,6 +11,10 @@ export function setFlashMessage(
     req: IRequestWithFlashMessages,
     message: flashMessage | flashMessage[]
 ): void {
+    // If session is unavailable (shouldn't happen when express-session is mounted),
+    // bail out to avoid throwing inside error handlers.
+    if (!req.session) return;
+
     if (Array.isArray(message)) {
         req.session.flashMessages = message;
     } else {
