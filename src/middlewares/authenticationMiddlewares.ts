@@ -20,11 +20,12 @@ export function ensureLoggedInMiddleware(
 }
 
 export async function ensureAdminUserMiddleware(
-    req: IRequestWithAuthenticatedUser,
+    req: Request,
     res: Response,
     next: NextFunction
 ): Promise<void> {
-    if (req.user === undefined || req.user.role !== USER_ROLES.admin) {
+    const user = req.user as IRequestWithAuthenticatedUser['user'] | undefined;
+    if (user === undefined || user.role !== USER_ROLES.admin) {
         setFlashMessage(req, {
             type: 'warning',
             message: 'You are not authorized to access this feature',

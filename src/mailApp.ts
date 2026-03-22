@@ -5,12 +5,15 @@ import appErrorHandlerMiddleware from './middlewares/appErrorHandlerMiddleware';
 import telemetryMiddleware from './middlewares/telemetryMiddleware';
 import { logTelemetry } from './telemetry/logger';
 import type { RequestWithTelemetry } from './types/telemetry';
+import { metricsMiddleware, metricsHandler } from './metrics';
 
 const app = express();
 
 app.use(express.json({ limit: '1mb' }));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(telemetryMiddleware);
+app.use(metricsMiddleware);
+app.get('/metrics', metricsHandler);
 
 app.post('/notify/email', async (req, res, next) => {
     try {

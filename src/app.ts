@@ -23,6 +23,7 @@ import cors from 'cors';
 import telemetryMiddleware from './middlewares/telemetryMiddleware';
 import { logTelemetry } from './telemetry/logger';
 import type { RequestWithTelemetry } from './types/telemetry';
+import { metricsMiddleware, metricsHandler } from './metrics';
 
 const app: Application = express();
 
@@ -38,6 +39,8 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static('public'));
 app.use(session(sessionConfig));
 app.use(telemetryMiddleware);
+app.use(metricsMiddleware);
+app.get('/metrics', metricsHandler);
 
 setupPassport();
 app.use(passport.initialize());
@@ -70,7 +73,7 @@ app.get('/', async (_req: Request, res: Response, next: NextFunction) => {
     }
 });
 
-if (appConfig.AUTH_SERVICE_URL) {
+if (appConfig.AUTH_SERVICE_URL !== '') {
     app.use('/auth', (req, res) => {
         res.redirect(`${appConfig.AUTH_SERVICE_URL}${req.originalUrl}`);
     });
@@ -79,7 +82,7 @@ if (appConfig.AUTH_SERVICE_URL) {
 }
 app.use('/user', ensureLoggedInMiddleware, userRouter);
 
-if (appConfig.PRODUCT_SERVICE_URL) {
+if (appConfig.PRODUCT_SERVICE_URL !== '') {
     app.use('/products', (req, res) => {
         res.redirect(`${appConfig.PRODUCT_SERVICE_URL}${req.originalUrl}`);
     });
@@ -87,7 +90,7 @@ if (appConfig.PRODUCT_SERVICE_URL) {
     app.use('/products', productRouter);
 }
 
-if (appConfig.CART_SERVICE_URL) {
+if (appConfig.CART_SERVICE_URL !== '') {
     app.use('/cart', (req, res) => {
         res.redirect(`${appConfig.CART_SERVICE_URL}${req.originalUrl}`);
     });
@@ -119,7 +122,7 @@ app.get('/chaos/log', (req: RequestWithTelemetry, res: Response) => {
         (req.query.level as string | undefined)?.toUpperCase() ??
         ('INFO' as const);
     const finalLevel = allowed.includes(level as any)
-        ? (level as typeof allowed[number])
+        ? (level as (typeof allowed)[number])
         : 'INFO';
     const category = (req.query.category as string) ?? 'system';
     const event =
@@ -128,15 +131,7 @@ app.get('/chaos/log', (req: RequestWithTelemetry, res: Response) => {
         (req.query.message as string) ??
         `Chaos log ${finalLevel.toLowerCase()} from app`;
 
-    logTelemetry(
-        req,
-        res,
-        finalLevel,
-        category as any,
-        event,
-        message,
-        {}
-    );
+    logTelemetry(req, res, finalLevel, category as any, event, message, {});
     res.json({ status: 'ok', level: finalLevel, category, event });
 });
 

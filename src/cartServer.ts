@@ -1,3 +1,6 @@
+import { initTracing } from './tracing';
+initTracing(process.env.SERVICE_NAME ?? 'cart-service');
+
 import 'dotenv/config';
 import { appConfig } from './config';
 import db from './database';

@@ -1,3 +1,6 @@
+import { initTracing } from './tracing';
+initTracing(process.env.SERVICE_NAME ?? 'app-service');
+
 import 'dotenv/config';
 import { appConfig } from './config';
 import app from './app';
