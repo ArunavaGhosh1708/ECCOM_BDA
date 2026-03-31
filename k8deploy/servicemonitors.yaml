@@ -9,6 +9,28 @@ spec:
   selector:
     matchLabels:
       app: trendtrove-app
+  namespaceSelector:
+    matchNames:
+      - default
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: trendtrove-app-v2
+  namespace: ecommerce
+  labels:
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: trendtrove-app-v2
+  namespaceSelector:
+    matchNames:
+      - default
   endpoints:
     - port: http
       path: /metrics
@@ -25,6 +47,9 @@ spec:
   selector:
     matchLabels:
       app: trendtrove-auth
+  namespaceSelector:
+    matchNames:
+      - default
   endpoints:
     - port: http
       path: /metrics
@@ -41,6 +66,9 @@ spec:
   selector:
     matchLabels:
       app: product-service
+  namespaceSelector:
+    matchNames:
+      - default
   endpoints:
     - port: http
       path: /metrics
@@ -57,6 +85,9 @@ spec:
   selector:
     matchLabels:
       app: cart-service
+  namespaceSelector:
+    matchNames:
+      - default
   endpoints:
     - port: http
       path: /metrics
@@ -73,6 +104,9 @@ spec:
   selector:
     matchLabels:
       app: mail-service
+  namespaceSelector:
+    matchNames:
+      - default
   endpoints:
     - port: http
       path: /metrics

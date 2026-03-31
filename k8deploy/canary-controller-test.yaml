@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: canary-controller-test
+  namespace: default
+spec:
+  serviceAccountName: default
+  restartPolicy: Never
+  containers:
+    - name: test
+      image: python:3.12-slim
+      command:
+        - sh
+        - -c
+        - |
+          set -e
+          apt-get update -y
+          apt-get install -y --no-install-recommends curl ca-certificates
+          KUBECTL_VERSION="v1.30.5"
+          curl -L --fail -o /usr/local/bin/kubectl "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
+          chmod +x /usr/local/bin/kubectl
+          echo "kubectl auth can-i create deployments/rollback -n default:"
+          kubectl auth can-i create deployments/rollback -n default
