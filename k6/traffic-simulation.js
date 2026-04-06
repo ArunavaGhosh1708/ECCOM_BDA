@@ -50,6 +50,7 @@ export const options = {
 };
 
 const PRODUCT_IDS = [1, 2, 3, 4, 5, 6];
+const SIZES = ['S', 'M', 'L'];
 
 function randomProduct() {
     return PRODUCT_IDS[Math.floor(Math.random() * PRODUCT_IDS.length)];
@@ -58,8 +59,6 @@ function randomProduct() {
 // ─── Scenario 1: Anonymous browsing ─────────────────────────────────────────
 
 export function anonymousBrowsing() {
-    const jar = http.cookieJar();
-
     group('homepage', () => {
         const res = http.get(`${BASE_URL}/`);
         errorRate.add(res.status >= 400);
@@ -168,7 +167,7 @@ export function purchaseFlow() {
             const id = randomProduct();
             const res = http.post(
                 `${BASE_URL}/cart/product/${id}/create`,
-                { productId: String(id), quantity: '1' },
+                { productId: String(id), quantity: '1', size: SIZES[Math.floor(Math.random() * SIZES.length)] },
                 params
             );
             errorRate.add(res.status >= 500);

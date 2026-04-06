@@ -80,6 +80,7 @@ export const options = {
 const PRODUCT_IDS  = [1, 2, 3, 4, 5, 6];
 const CATEGORIES   = ['shirts', 'pants', 'shoes', 'accessories'];
 const SORT_OPTIONS = ['price', 'name', 'createdAt'];
+const SIZES        = ['S', 'M', 'L'];
 
 function pick(arr) {
     return arr[Math.floor(Math.random() * arr.length)];
@@ -183,7 +184,7 @@ export function purchaseFlow() {
             const qty = Math.floor(rand(1, 4));
             const res = http.post(
                 `${BASE_URL}/cart/product/${id}/create`,
-                { productId: String(id), quantity: String(qty) },
+                { productId: String(id), quantity: String(qty), size: pick(SIZES) },
                 params
             );
             errorRate.add(res.status >= 500);
@@ -251,7 +252,7 @@ export function repeatCustomer() {
             const id = pick(PRODUCT_IDS);
             const res = http.post(
                 `${BASE_URL}/cart/product/${id}/create`,
-                { productId: String(id), quantity: '1' },
+                { productId: String(id), quantity: '1', size: pick(SIZES) },
                 params
             );
             if (res.status < 400) cartAdditions.add(1);
