@@ -1,0 +1,250 @@
+{
+  "dashboard": {
+    "title": "TrendTrove — Service Graph",
+    "tags": ["trendtrove", "service-graph"],
+    "timezone": "browser",
+    "refresh": "30s",
+    "time": { "from": "now-15m", "to": "now" },
+    "panels": [
+
+      {
+        "id": 1,
+        "title": "Service Topology",
+        "description": "Service map. To draw arrows: click a box edge anchor (circle), drag to target box. Green=app routing, Orange=DB, Blue=telemetry.",
+        "type": "canvas",
+        "gridPos": { "x": 0, "y": 0, "w": 24, "h": 22 },
+        "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
+        "targets": [
+          { "expr": "sum(rate({app=\"trendtrove-app\"} | json [2m]))", "refId": "A", "instant": true, "legendFormat": "app" },
+          { "expr": "sum(rate({app=\"trendtrove-auth\"} | json [2m]))", "refId": "B", "instant": true, "legendFormat": "auth" },
+          { "expr": "sum(rate({app=\"cart-service\"} | json [2m]))", "refId": "C", "instant": true, "legendFormat": "cart" },
+          { "expr": "sum(rate({app=\"trendtrove-app-v2\"} | json [2m]))", "refId": "D", "instant": true, "legendFormat": "app-v2" }
+        ],
+        "transformations": [
+          { "id": "reduce", "options": { "reducers": ["lastNotNull"] } }
+        ],
+        "options": {
+          "inlineEditing": true,
+          "panZoom": false,
+          "tooltip": { "mode": "single" },
+          "root": {
+            "type": "frame",
+            "name": "root",
+            "placement": { "left": 0, "top": 0, "width": 100, "height": 100, "rotation": 0 },
+            "background": { "color": { "fixed": "transparent" } },
+            "border": { "color": { "fixed": "transparent" } },
+            "elements": [
+
+              {
+                "type": "rectangle",
+                "name": "app-service",
+                "placement": { "left": 36, "top": 4, "width": 18, "height": 14, "rotation": 0 },
+                "background": { "color": { "fixed": "#1F60C4" } },
+                "border": { "color": { "fixed": "#5794F2" } },
+                "config": {
+                  "text": { "fixed": "App Service" },
+                  "align": "center",
+                  "valign": "middle",
+                  "color": { "fixed": "#FFFFFF" },
+                  "size": 16
+                },
+                "connections": []
+              },
+
+              {
+                "type": "rectangle",
+                "name": "app-v2",
+                "placement": { "left": 8, "top": 4, "width": 18, "height": 14, "rotation": 0 },
+                "background": { "color": { "fixed": "#614D93" } },
+                "border": { "color": { "fixed": "#B877D9" } },
+                "config": {
+                  "text": { "fixed": "App v2 (Canary)" },
+                  "align": "center",
+                  "valign": "middle",
+                  "color": { "fixed": "#FFFFFF" },
+                  "size": 14
+                },
+                "connections": []
+              },
+
+              {
+                "type": "rectangle",
+                "name": "otel-collector",
+                "placement": { "left": 74, "top": 4, "width": 18, "height": 14, "rotation": 0 },
+                "background": { "color": { "fixed": "#37872D" } },
+                "border": { "color": { "fixed": "#73BF69" } },
+                "config": {
+                  "text": { "fixed": "OTel Collector" },
+                  "align": "center",
+                  "valign": "middle",
+                  "color": { "fixed": "#FFFFFF" },
+                  "size": 14
+                },
+                "connections": []
+              },
+
+              {
+                "type": "rectangle",
+                "name": "auth-service",
+                "placement": { "left": 8, "top": 40, "width": 18, "height": 14, "rotation": 0 },
+                "background": { "color": { "fixed": "#1F60C4" } },
+                "border": { "color": { "fixed": "#5794F2" } },
+                "config": {
+                  "text": { "fixed": "Auth Service" },
+                  "align": "center",
+                  "valign": "middle",
+                  "color": { "fixed": "#FFFFFF" },
+                  "size": 16
+                },
+                "connections": []
+              },
+
+              {
+                "type": "rectangle",
+                "name": "product-service",
+                "placement": { "left": 36, "top": 40, "width": 18, "height": 14, "rotation": 0 },
+                "background": { "color": { "fixed": "#1F60C4" } },
+                "border": { "color": { "fixed": "#5794F2" } },
+                "config": {
+                  "text": { "fixed": "Product Service" },
+                  "align": "center",
+                  "valign": "middle",
+                  "color": { "fixed": "#FFFFFF" },
+                  "size": 16
+                },
+                "connections": []
+              },
+
+              {
+                "type": "rectangle",
+                "name": "cart-service",
+                "placement": { "left": 64, "top": 40, "width": 18, "height": 14, "rotation": 0 },
+                "background": { "color": { "fixed": "#1F60C4" } },
+                "border": { "color": { "fixed": "#5794F2" } },
+                "config": {
+                  "text": { "fixed": "Cart Service" },
+                  "align": "center",
+                  "valign": "middle",
+                  "color": { "fixed": "#FFFFFF" },
+                  "size": 16
+                },
+                "connections": []
+              },
+
+              {
+                "type": "rectangle",
+                "name": "postgres",
+                "placement": { "left": 36, "top": 76, "width": 18, "height": 14, "rotation": 0 },
+                "background": { "color": { "fixed": "#C4162A" } },
+                "border": { "color": { "fixed": "#FF7383" } },
+                "config": {
+                  "text": { "fixed": "Postgres" },
+                  "align": "center",
+                  "valign": "middle",
+                  "color": { "fixed": "#FFFFFF" },
+                  "size": 16
+                },
+                "connections": []
+              },
+
+              {
+                "type": "rectangle",
+                "name": "mongodb",
+                "placement": { "left": 8, "top": 76, "width": 18, "height": 14, "rotation": 0 },
+                "background": { "color": { "fixed": "#C4162A" } },
+                "border": { "color": { "fixed": "#FF7383" } },
+                "config": {
+                  "text": { "fixed": "MongoDB" },
+                  "align": "center",
+                  "valign": "middle",
+                  "color": { "fixed": "#FFFFFF" },
+                  "size": 16
+                },
+                "connections": []
+              }
+
+            ]
+          }
+        }
+      },
+
+      { "type": "row", "title": "Per-Service Request Rates", "id": 20, "gridPos": { "x": 0, "y": 22, "w": 24, "h": 1 }, "collapsed": false },
+
+      {
+        "id": 21,
+        "title": "App Service — Request Rate",
+        "type": "timeseries",
+        "gridPos": { "x": 0, "y": 23, "w": 6, "h": 7 },
+        "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
+        "targets": [
+          { "expr": "sum(rate({app=\"trendtrove-app\"} | json [1m]))", "refId": "A", "legendFormat": "requests/s" }
+        ],
+        "fieldConfig": { "defaults": { "unit": "reqps", "color": { "mode": "fixed", "fixedColor": "#1F60C4" }, "custom": { "fillOpacity": 15, "lineWidth": 2 } } }
+      },
+
+      {
+        "id": 22,
+        "title": "Auth Service — Request Rate",
+        "type": "timeseries",
+        "gridPos": { "x": 6, "y": 23, "w": 6, "h": 7 },
+        "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
+        "targets": [
+          { "expr": "sum(rate({app=\"trendtrove-auth\"} | json [1m]))", "refId": "A", "legendFormat": "requests/s" }
+        ],
+        "fieldConfig": { "defaults": { "unit": "reqps", "color": { "mode": "fixed", "fixedColor": "#1F60C4" }, "custom": { "fillOpacity": 15, "lineWidth": 2 } } }
+      },
+
+      {
+        "id": 23,
+        "title": "Product Service — Request Rate",
+        "type": "timeseries",
+        "gridPos": { "x": 12, "y": 23, "w": 6, "h": 7 },
+        "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
+        "targets": [
+          { "expr": "sum(rate({app=\"trendtrove-app\"} | json | http_path=~\"/products.*\" [1m]))", "refId": "A", "legendFormat": "requests/s" }
+        ],
+        "fieldConfig": { "defaults": { "unit": "reqps", "color": { "mode": "fixed", "fixedColor": "#1F60C4" }, "custom": { "fillOpacity": 15, "lineWidth": 2 } } }
+      },
+
+      {
+        "id": 24,
+        "title": "Cart Service — Request Rate",
+        "type": "timeseries",
+        "gridPos": { "x": 18, "y": 23, "w": 6, "h": 7 },
+        "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
+        "targets": [
+          { "expr": "sum(rate({app=\"cart-service\"} | json [1m]))", "refId": "A", "legendFormat": "requests/s" }
+        ],
+        "fieldConfig": { "defaults": { "unit": "reqps", "color": { "mode": "fixed", "fixedColor": "#1F60C4" }, "custom": { "fillOpacity": 15, "lineWidth": 2 } } }
+      },
+
+      {
+        "id": 25,
+        "title": "Error Rate by Service",
+        "type": "timeseries",
+        "gridPos": { "x": 0, "y": 30, "w": 24, "h": 8 },
+        "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
+        "targets": [
+          { "expr": "sum(rate({app=\"trendtrove-app\"} | json | level=\"ERROR\" [1m]))", "refId": "A", "legendFormat": "app-service" },
+          { "expr": "sum(rate({app=\"trendtrove-auth\"} | json | level=\"ERROR\" [1m]))", "refId": "B", "legendFormat": "auth-service" },
+          { "expr": "sum(rate({app=\"cart-service\"} | json | level=\"ERROR\" [1m]))", "refId": "C", "legendFormat": "cart-service" },
+          { "expr": "sum(rate({app=\"trendtrove-app-v2\"} | json | level=\"ERROR\" [1m]))", "refId": "D", "legendFormat": "app-v2 (canary)" }
+        ],
+        "fieldConfig": {
+          "defaults": { "unit": "reqps", "custom": { "lineWidth": 2, "fillOpacity": 10 } },
+          "overrides": [
+            { "matcher": { "id": "byName", "options": "app-service" },     "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }] },
+            { "matcher": { "id": "byName", "options": "auth-service" },    "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "orange" } }] },
+            { "matcher": { "id": "byName", "options": "cart-service" },    "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "yellow" } }] },
+            { "matcher": { "id": "byName", "options": "app-v2 (canary)" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "purple" } }] }
+          ]
+        },
+        "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+      }
+
+    ],
+    "schemaVersion": 36
+  },
+  "overwrite": true,
+  "folderId": 0
+}

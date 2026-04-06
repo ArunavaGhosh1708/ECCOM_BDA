@@ -1,0 +1,292 @@
+{
+  "dashboard": {
+    "title": "TrendTrove — Operations Centre",
+    "tags": ["trendtrove", "main"],
+    "timezone": "browser",
+    "refresh": "15s",
+    "time": { "from": "now-30m", "to": "now" },
+    "panels": [
+
+      { "id": 1,  "type": "stat", "title": "Total Requests",
+        "description": "HTTP requests handled by the app in the selected time window.",
+        "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
+        "datasource": { "type": "prometheus", "uid": "afh82c4dmf4sgc" },
+        "targets": [{ "expr": "sum(increase(http_requests_total{job=~\"app-service|app-service-v2\"}[$__range]))", "refId": "A", "instant": true }],
+        "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "fixed", "fixedColor": "#5794F2" }, "thresholds": { "mode": "absolute", "steps": [{ "value": 0, "color": "#5794F2" }] } } },
+        "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none", "textMode": "auto" }
+      },
+
+      { "id": 2,  "type": "stat", "title": "Error Rate",
+        "description": "% of requests that returned a 4xx or 5xx response.",
+        "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
+        "datasource": { "type": "prometheus", "uid": "afh82c4dmf4sgc" },
+        "targets": [{ "expr": "sum(increase(http_requests_total{job=~\"app-service|app-service-v2\", status_code=~\"[45]..\"}[$__range])) / sum(increase(http_requests_total{job=~\"app-service|app-service-v2\"}[$__range])) * 100", "refId": "A", "instant": true }],
+        "fieldConfig": { "defaults": { "unit": "percent", "decimals": 1, "thresholds": { "mode": "absolute", "steps": [{ "value": 0, "color": "green" }, { "value": 2, "color": "orange" }, { "value": 5, "color": "red" }] }, "color": { "mode": "thresholds" } } },
+        "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" }
+      },
+
+      { "id": 3,  "type": "stat", "title": "p95 Latency",
+        "description": "95th percentile response time. 95% of users are faster than this.",
+        "gridPos": { "x": 8, "y": 0, "w": 4, "h": 4 },
+        "datasource": { "type": "prometheus", "uid": "afh82c4dmf4sgc" },
+        "targets": [{ "expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{job=\"app-service\"}[5m]))) * 1000", "refId": "A", "instant": true }],
+        "fieldConfig": { "defaults": { "unit": "ms", "decimals": 0, "thresholds": { "mode": "absolute", "steps": [{ "value": 0, "color": "green" }, { "value": 500, "color": "orange" }, { "value": 1500, "color": "red" }] }, "color": { "mode": "thresholds" } } },
+        "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" }
+      },
+
+      { "id": 4,  "type": "stat", "title": "Cart Additions",
+        "description": "Items added to cart — a direct measure of purchase intent.",
+        "gridPos": { "x": 12, "y": 0, "w": 4, "h": 4 },
+        "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
+        "targets": [{ "expr": "sum(count_over_time({app=~\"trendtrove-app|cart-service\"} | json | event=\"cart.item.added\" [$__range]))", "refId": "A", "instant": true }],
+        "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "fixed", "fixedColor": "#73BF69" }, "thresholds": { "mode": "absolute", "steps": [{ "value": 0, "color": "#73BF69" }] } } },
+        "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" }
+      },
+
+      { "id": 5,  "type": "stat", "title": "Checkouts Initiated",
+        "description": "Users who reached the checkout page.",
+        "gridPos": { "x": 16, "y": 0, "w": 4, "h": 4 },
+        "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
+        "targets": [{ "expr": "sum(count_over_time({app=~\"trendtrove-app|cart-service\"} | json | event=\"checkout.initiated\" [$__range]))", "refId": "A", "instant": true }],
+        "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "fixed", "fixedColor": "#8AB8FF" }, "thresholds": { "mode": "absolute", "steps": [{ "value": 0, "color": "#8AB8FF" }] } } },
+        "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" }
+      },
+
+      { "id": 6,  "type": "stat", "title": "Payments Initiated",
+        "description": "Stripe checkout sessions created — the bottom of the purchase funnel.",
+        "gridPos": { "x": 20, "y": 0, "w": 4, "h": 4 },
+        "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
+        "targets": [{ "expr": "sum(count_over_time({app=~\"trendtrove-app|cart-service\"} | json | event=\"payment.initiated\" [$__range]))", "refId": "A", "instant": true }],
+        "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "fixed", "fixedColor": "#FADE2A" }, "thresholds": { "mode": "absolute", "steps": [{ "value": 0, "color": "#FADE2A" }] } } },
+        "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" }
+      },
+
+      { "id": 10, "type": "row", "title": "HTTP Traffic", "collapsed": false, "gridPos": { "x": 0, "y": 4, "w": 24, "h": 1 } },
+
+      { "id": 11, "type": "timeseries", "title": "Request Rate by Route",
+        "description": "Requests per second broken down by route. Peaks reveal which endpoints are under load.",
+        "gridPos": { "x": 0, "y": 5, "w": 15, "h": 10 },
+        "datasource": { "type": "prometheus", "uid": "afh82c4dmf4sgc" },
+        "targets": [
+          { "expr": "topk(8, sum by (route) (rate(http_requests_total{job=~\"app-service|app-service-v2\"}[1m])))", "refId": "A", "legendFormat": "{{route}}" }
+        ],
+        "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "lineWidth": 2, "fillOpacity": 8 } } },
+        "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] } }
+      },
+
+      { "id": 12, "type": "piechart", "title": "HTTP Status Codes",
+        "description": "Distribution of response codes over the selected window. Green = 2xx, orange = 3xx, red = 4xx/5xx.",
+        "gridPos": { "x": 15, "y": 5, "w": 9, "h": 10 },
+        "datasource": { "type": "prometheus", "uid": "afh82c4dmf4sgc" },
+        "targets": [
+          { "expr": "sum by (status_code) (increase(http_requests_total{job=~\"app-service|app-service-v2\"}[$__range]))", "refId": "A", "legendFormat": "{{status_code}}", "instant": true }
+        ],
+        "fieldConfig": {
+          "overrides": [
+            { "matcher": { "id": "byRegexp", "options": "^2.*" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#73BF69" } }] },
+            { "matcher": { "id": "byRegexp", "options": "^3.*" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#8AB8FF" } }] },
+            { "matcher": { "id": "byRegexp", "options": "^4.*" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#FF9830" } }] },
+            { "matcher": { "id": "byRegexp", "options": "^5.*" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#F2495C" } }] }
+          ]
+        },
+        "options": { "pieType": "donut", "legend": { "displayMode": "table", "placement": "right" } }
+      },
+
+      { "id": 20, "type": "row", "title": "Latency & Runtime Health", "collapsed": false, "gridPos": { "x": 0, "y": 15, "w": 24, "h": 1 } },
+
+      { "id": 21, "type": "timeseries", "title": "Response Time Percentiles",
+        "description": "p50 = median user experience. p95 = worst 5% of users. p99 = worst 1%. Watch for p99 diverging from p95 — that signals outlier slowness.",
+        "gridPos": { "x": 0, "y": 16, "w": 14, "h": 9 },
+        "datasource": { "type": "prometheus", "uid": "afh82c4dmf4sgc" },
+        "targets": [
+          { "expr": "histogram_quantile(0.50, sum by (le) (rate(http_request_duration_seconds_bucket{job=\"app-service\"}[2m]))) * 1000", "refId": "A", "legendFormat": "p50" },
+          { "expr": "histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{job=\"app-service\"}[2m]))) * 1000", "refId": "B", "legendFormat": "p95" },
+          { "expr": "histogram_quantile(0.99, sum by (le) (rate(http_request_duration_seconds_bucket{job=\"app-service\"}[2m]))) * 1000", "refId": "C", "legendFormat": "p99" }
+        ],
+        "fieldConfig": {
+          "defaults": { "unit": "ms", "custom": { "lineWidth": 2, "fillOpacity": 5 } },
+          "overrides": [
+            { "matcher": { "id": "byName", "options": "p50" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#73BF69" } }] },
+            { "matcher": { "id": "byName", "options": "p95" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#FF9830" } }] },
+            { "matcher": { "id": "byName", "options": "p99" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#F2495C" } }] }
+          ]
+        },
+        "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+      },
+
+      { "id": 22, "type": "timeseries", "title": "Node.js Event Loop Lag",
+        "description": "How long the event loop is blocked. High lag means the JS thread is busy (CPU-intensive work or I/O backlog) and requests are queuing. Anything above 100ms is a concern.",
+        "gridPos": { "x": 14, "y": 16, "w": 10, "h": 9 },
+        "datasource": { "type": "prometheus", "uid": "afh82c4dmf4sgc" },
+        "targets": [
+          { "expr": "nodejs_eventloop_lag_p99_seconds{job=\"app-service\"} * 1000",    "refId": "A", "legendFormat": "app — p99" },
+          { "expr": "nodejs_eventloop_lag_p99_seconds{job=\"app-service-v2\"} * 1000", "refId": "B", "legendFormat": "app-v2 — p99" },
+          { "expr": "nodejs_eventloop_lag_mean_seconds{job=\"app-service\"} * 1000",   "refId": "C", "legendFormat": "app — mean" }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ms", "custom": { "lineWidth": 2, "fillOpacity": 8 },
+            "thresholds": { "mode": "absolute", "steps": [{ "value": 0, "color": "green" }, { "value": 100, "color": "orange" }, { "value": 500, "color": "red" }] }
+          },
+          "overrides": [
+            { "matcher": { "id": "byName", "options": "app — p99" },  "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#5794F2" } }] },
+            { "matcher": { "id": "byName", "options": "app-v2 — p99" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#B877D9" } }] },
+            { "matcher": { "id": "byName", "options": "app — mean" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#8AB8FF" } }, { "id": "custom.lineStyle", "value": { "dash": [4,4], "fill": "dash" } }] }
+          ]
+        },
+        "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+      },
+
+      { "id": 30, "type": "row", "title": "Log Analysis", "collapsed": false, "gridPos": { "x": 0, "y": 25, "w": 24, "h": 1 } },
+
+      { "id": 31, "type": "timeseries", "title": "Log Volume by Level",
+        "description": "Rate of log lines per severity across all services. A rising ERROR line is the first signal of a problem in production.",
+        "gridPos": { "x": 0, "y": 26, "w": 11, "h": 9 },
+        "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
+        "targets": [
+          { "expr": "sum by (level) (rate({app=~\"trendtrove-app|trendtrove-auth|cart-service\"} | json | level != \"\" [1m]))", "refId": "A", "legendFormat": "{{level}}" }
+        ],
+        "fieldConfig": {
+          "defaults": { "unit": "reqps", "custom": { "lineWidth": 2, "fillOpacity": 8 } },
+          "overrides": [
+            { "matcher": { "id": "byName", "options": "ERROR" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#F2495C" } }] },
+            { "matcher": { "id": "byName", "options": "WARN" },  "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#FF9830" } }] },
+            { "matcher": { "id": "byName", "options": "INFO" },  "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#73BF69" } }] },
+            { "matcher": { "id": "byName", "options": "DEBUG" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#8AB8FF" } }] }
+          ]
+        },
+        "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+      },
+
+      { "id": 32, "type": "barchart", "title": "Top Endpoints by Log Volume",
+        "description": "Which routes generate the most log events. High volume on an error-prone route compounds the problem.",
+        "gridPos": { "x": 11, "y": 26, "w": 7, "h": 9 },
+        "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
+        "targets": [
+          { "expr": "topk(8, sum by (http_path) (count_over_time({app=~\"trendtrove-app|trendtrove-auth|cart-service\"} | json | http_path != \"\" [$__range])))", "refId": "A", "legendFormat": "{{http_path}}", "instant": true }
+        ],
+        "transformations": [
+          { "id": "reduce", "options": { "reducers": ["sum"] } },
+          { "id": "sortBy", "options": { "fields": [{ "displayName": "Total", "desc": true }] } }
+        ],
+        "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "palette-classic" } } },
+        "options": { "orientation": "horizontal", "legend": { "displayMode": "hidden" }, "xField": "Field", "barWidth": 0.7 }
+      },
+
+      { "id": 33, "type": "logs", "title": "Live Error Feed",
+        "description": "Real-time ERROR log stream. The most direct window into what's actively failing.",
+        "gridPos": { "x": 18, "y": 26, "w": 6, "h": 9 },
+        "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
+        "targets": [
+          { "expr": "{app=~\"trendtrove-app|trendtrove-auth|cart-service\"} | json | level=\"ERROR\"", "refId": "A" }
+        ],
+        "options": { "dedupStrategy": "none", "showLabels": false, "showTime": true, "sortOrder": "Descending", "wrapLogMessage": true, "prettifyLogMessage": false }
+      },
+
+      { "id": 40, "type": "row", "title": "Purchase Funnel", "collapsed": false, "gridPos": { "x": 0, "y": 35, "w": 24, "h": 1 } },
+
+      { "id": 41, "type": "timeseries", "title": "Purchase Funnel Over Time",
+        "description": "The gap between lines shows drop-off. A sudden narrowing of the gap between 'Cart Added' and 'Checkout' means more users are converting. A growing gap means abandonment is increasing.",
+        "gridPos": { "x": 0, "y": 36, "w": 14, "h": 9 },
+        "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
+        "targets": [
+          { "expr": "sum(rate({app=~\"trendtrove-app|cart-service\"} | json | event=\"cart.item.added\" [2m]))",    "refId": "A", "legendFormat": "1. Item Added to Cart" },
+          { "expr": "sum(rate({app=~\"trendtrove-app|cart-service\"} | json | event=\"checkout.initiated\" [2m]))", "refId": "B", "legendFormat": "2. Checkout Initiated" },
+          { "expr": "sum(rate({app=~\"trendtrove-app|cart-service\"} | json | event=\"payment.initiated\" [2m]))",  "refId": "C", "legendFormat": "3. Payment Initiated" }
+        ],
+        "fieldConfig": {
+          "defaults": { "unit": "reqps", "custom": { "lineWidth": 2, "fillOpacity": 12 } },
+          "overrides": [
+            { "matcher": { "id": "byName", "options": "1. Item Added to Cart" },  "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#5794F2" } }] },
+            { "matcher": { "id": "byName", "options": "2. Checkout Initiated" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#8AB8FF" } }] },
+            { "matcher": { "id": "byName", "options": "3. Payment Initiated" },  "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#73BF69" } }] }
+          ]
+        },
+        "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+      },
+
+      { "id": 42, "type": "timeseries", "title": "Business Events by Category",
+        "description": "All instrumented business events grouped by category. Useful for spotting which area of the app is most active or experiencing problems.",
+        "gridPos": { "x": 14, "y": 36, "w": 10, "h": 9 },
+        "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
+        "targets": [
+          { "expr": "sum by (category) (rate({app=~\"trendtrove-app|trendtrove-auth|cart-service\"} | json | category != \"\" [1m]))", "refId": "A", "legendFormat": "{{category}}" }
+        ],
+        "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "lineWidth": 2, "fillOpacity": 8 } } },
+        "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+      },
+
+      { "id": 50, "type": "row", "title": "Error Analysis", "collapsed": false, "gridPos": { "x": 0, "y": 45, "w": 24, "h": 1 } },
+
+      { "id": 51, "type": "timeseries", "title": "Error Rate by Service",
+        "description": "Which service is the source of errors. Isolates the blast radius of a problem — a spike on one service while others stay flat means a localised issue.",
+        "gridPos": { "x": 0, "y": 46, "w": 14, "h": 9 },
+        "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
+        "targets": [
+          { "expr": "sum(rate({app=\"trendtrove-app\"}     | json | level=\"ERROR\" [1m]))", "refId": "A", "legendFormat": "app-service" },
+          { "expr": "sum(rate({app=\"trendtrove-auth\"}    | json | level=\"ERROR\" [1m]))", "refId": "B", "legendFormat": "auth-service" },
+          { "expr": "sum(rate({app=\"cart-service\"}       | json | level=\"ERROR\" [1m]))", "refId": "C", "legendFormat": "cart-service" },
+          { "expr": "sum(rate({app=\"trendtrove-app-v2\"} | json | level=\"ERROR\" [1m]))", "refId": "D", "legendFormat": "app-v2 (canary)" }
+        ],
+        "fieldConfig": {
+          "defaults": { "unit": "reqps", "custom": { "lineWidth": 2, "fillOpacity": 10 } },
+          "overrides": [
+            { "matcher": { "id": "byName", "options": "app-service" },     "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#F2495C" } }] },
+            { "matcher": { "id": "byName", "options": "auth-service" },    "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#FF9830" } }] },
+            { "matcher": { "id": "byName", "options": "cart-service" },    "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#FADE2A" } }] },
+            { "matcher": { "id": "byName", "options": "app-v2 (canary)" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#B877D9" } }] }
+          ]
+        },
+        "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+      },
+
+      { "id": 52, "type": "timeseries", "title": "Auth Events Over Time",
+        "description": "Login, signup, and logout activity. A spike in auth.failed relative to auth.login attempts indicates brute-force or misconfigured clients.",
+        "gridPos": { "x": 14, "y": 46, "w": 10, "h": 9 },
+        "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
+        "targets": [
+          { "expr": "sum(rate({app=\"trendtrove-auth\"} | json | event != \"\" [1m])) by (event)", "refId": "A", "legendFormat": "{{event}}" }
+        ],
+        "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "lineWidth": 2, "fillOpacity": 8 } } },
+        "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+      },
+
+      { "id": 60, "type": "row", "title": "Node.js Runtime", "collapsed": false, "gridPos": { "x": 0, "y": 55, "w": 24, "h": 1 } },
+
+      { "id": 61, "type": "timeseries", "title": "Active Handles & Requests",
+        "description": "Active handles = open connections/timers/sockets. Active requests = in-flight async I/O. High values under load are normal; values that don't drop after load eases indicate a leak.",
+        "gridPos": { "x": 0, "y": 56, "w": 12, "h": 8 },
+        "datasource": { "type": "prometheus", "uid": "afh82c4dmf4sgc" },
+        "targets": [
+          { "expr": "nodejs_active_handles{job=\"app-service\"}",  "refId": "A", "legendFormat": "Active Handles" },
+          { "expr": "nodejs_active_requests{job=\"app-service\"}", "refId": "B", "legendFormat": "Active Requests" }
+        ],
+        "fieldConfig": {
+          "defaults": { "unit": "short", "custom": { "lineWidth": 2, "fillOpacity": 10 } },
+          "overrides": [
+            { "matcher": { "id": "byName", "options": "Active Handles" },  "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#5794F2" } }] },
+            { "matcher": { "id": "byName", "options": "Active Requests" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#FF9830" } }] }
+          ]
+        },
+        "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+      },
+
+      { "id": 62, "type": "timeseries", "title": "Garbage Collection Duration",
+        "description": "Time spent in GC pauses per second. GC is normal, but spikes indicate memory pressure. Long GC pauses block the event loop, which you'll also see in the Event Loop Lag panel.",
+        "gridPos": { "x": 12, "y": 56, "w": 12, "h": 8 },
+        "datasource": { "type": "prometheus", "uid": "afh82c4dmf4sgc" },
+        "targets": [
+          { "expr": "sum by (kind) (rate(nodejs_gc_duration_seconds_sum{job=\"app-service\"}[1m])) * 1000", "refId": "A", "legendFormat": "GC — {{kind}}" }
+        ],
+        "fieldConfig": {
+          "defaults": { "unit": "ms", "custom": { "lineWidth": 2, "fillOpacity": 10 } }
+        },
+        "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
+      }
+
+    ],
+    "schemaVersion": 36
+  },
+  "overwrite": true,
+  "folderId": 0
+}
