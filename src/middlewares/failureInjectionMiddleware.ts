@@ -7,7 +7,7 @@ export default function failureInjectionMiddleware(
     res: Response,
     next: NextFunction
 ): void {
-    if (FAIL_MODE === 'auth' && req.path.startsWith('/auth/signup')) {
+    if (FAIL_MODE === 'auth' && req.path.startsWith('/auth')) {
         res.status(500).json({
             error: 'Internal Server Error',
             message: 'Auth service unavailable',
