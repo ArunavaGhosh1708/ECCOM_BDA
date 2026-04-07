@@ -12,6 +12,7 @@ spec:
       labels:
         app: trendtrove-app-v2
     spec:
+      terminationGracePeriodSeconds: 60
       containers:
         - name: app
           image: us-central1-docker.pkg.dev/canaryguard-bda/canaryguard/trendtrove-app:v2

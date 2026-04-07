@@ -41,8 +41,9 @@ data:
             raise RuntimeError(f"kubectl rollout undo failed (exit={proc.returncode})")
 
     def can_rollback(namespace: str) -> bool:
-        # kubectl auth can-i returns exit code 0 on "yes", 1 on "no".
-        cmd = ["kubectl", "auth", "can-i", "create", "deployments/rollback", "-n", namespace]
+        # deployments/rollback subresource was removed in k8s 1.22.
+        # kubectl rollout undo now patches the deployment spec directly.
+        cmd = ["kubectl", "auth", "can-i", "patch", "deployments", "-n", namespace]
         proc = subprocess.run(cmd, capture_output=True, text=True)
         out = (proc.stdout or "").strip().lower()
         return out == "yes"
@@ -51,48 +52,83 @@ data:
         prom_url = os.environ.get("PROMETHEUS_URL", "http://prometheus-kube-prometheus-prometheus:9090")
         namespace = os.environ.get("NAMESPACE", "default")
         canary_deployment = os.environ.get("CANARY_DEPLOYMENT", "trendtrove-app-v2")
-        pod_regex = os.environ.get("CANARY_POD_REGEX", "trendtrove-app-v2-.*")
+        canary_service = os.environ.get("CANARY_SERVICE", "app-service-v2")
         threshold_percent = float(os.environ.get("ERROR_RATE_THRESHOLD_PERCENT", "5"))
+        restart_threshold = int(os.environ.get("RESTART_THRESHOLD", "2"))
         poll_interval_s = int(os.environ.get("POLL_INTERVAL_SECONDS", "30"))
 
-        # We compute error rate as: delta(5xx) / delta(total) over each poll window.
-        # This avoids range-vector issues when traffic is low.
-        total_query = f'sum(http_requests_total{{pod=~"{pod_regex}"}}) or vector(0)'
+        # Dual-signal detection:
+        # 1. Error rate via app-level prom-client metrics (catches 5xx when pod stays up)
+        # 2. Pod restart count via kube-state-metrics (catches crashes — pod dies before
+        #    recording metrics, so error rate stays 0 but restarts accumulate)
+        pod_regex = f"{canary_deployment}-.*"
+        total_query = f'sum(http_requests_total{{service="{canary_service}"}}) or vector(0)'
         error_query = (
-            f'sum(http_requests_total{{pod=~"{pod_regex}",status_code=~"5.."}}) or vector(0)'
+            f'sum(http_requests_total{{service="{canary_service}",status_code=~"5.."}}) or vector(0)'
+        )
+        restart_query = (
+            f'sum(kube_pod_container_status_restarts_total{{pod=~"{pod_regex}",namespace="{namespace}"}}) or vector(0)'
         )
 
         print(f"[canary-controller] prom_url={prom_url}", flush=True)
-        print(f"[canary-controller] pod_regex={pod_regex}", flush=True)
+        print(f"[canary-controller] canary_service={canary_service}", flush=True)
         print(f"[canary-controller] threshold_percent={threshold_percent}", flush=True)
+        print(f"[canary-controller] restart_threshold={restart_threshold}", flush=True)
         print(f"[canary-controller] total_query={total_query}", flush=True)
         print(f"[canary-controller] error_query={error_query}", flush=True)
+        print(f"[canary-controller] restart_query={restart_query}", flush=True)
 
         prev_total = prom_query(prom_url, total_query)
         prev_errors = prom_query(prom_url, error_query)
-        print(f"[canary-controller] initial prev_total={prev_total}, prev_errors={prev_errors}", flush=True)
+        baseline_restarts = prom_query(prom_url, restart_query)
+        print(f"[canary-controller] initial prev_total={prev_total}, prev_errors={prev_errors}, baseline_restarts={baseline_restarts}", flush=True)
 
         while True:
             time.sleep(poll_interval_s)
 
             cur_total = prom_query(prom_url, total_query)
             cur_errors = prom_query(prom_url, error_query)
+            cur_restarts = prom_query(prom_url, restart_query)
 
             delta_total = cur_total - prev_total
             delta_errors = cur_errors - prev_errors
+            delta_restarts = cur_restarts - baseline_restarts
 
-            # Always advance baselines (counters can reset on restarts).
+            # Advance error baselines each window (counters reset on pod restart).
             prev_total = cur_total
             prev_errors = cur_errors
+            # If restart count went backwards, a new pod was created (old one deleted).
+            # Re-anchor the baseline so we count from this new pod onwards.
+            if delta_restarts < 0:
+                print(
+                    f"[canary-controller] pod replaced (restart counter reset); re-anchoring baseline "
+                    f"from {baseline_restarts:.0f} to {cur_restarts:.0f}",
+                    flush=True,
+                )
+                baseline_restarts = cur_restarts
+                delta_restarts = 0
 
+            # Signal 1: restart-based (catches crashes)
+            if delta_restarts >= restart_threshold:
+                print(
+                    f"[canary-controller] RESTART threshold exceeded: {delta_restarts:.0f} restarts >= {restart_threshold}; undoing deployment {canary_deployment}",
+                    flush=True,
+                )
+                if not can_rollback(namespace):
+                    print("[canary-controller] ERROR: no permission to rollback.", flush=True)
+                    return
+                run_kubectl_undo(namespace, canary_deployment)
+                return
+
+            # Signal 2: error-rate-based (catches 5xx when pod stays up)
             if delta_total <= 0:
-                print("[canary-controller] no new requests in last window; skipping", flush=True)
+                print(f"[canary-controller] no new requests in window; restarts_since_start={delta_restarts:.0f}", flush=True)
                 continue
 
             error_rate_percent = (delta_errors / delta_total) * 100.0
             print(
                 f"[canary-controller] delta_total={delta_total:.0f} delta_errors={delta_errors:.0f} "
-                f"error_rate_percent={error_rate_percent:.3f}",
+                f"error_rate_percent={error_rate_percent:.3f} restarts_since_start={delta_restarts:.0f}",
                 flush=True,
             )
 
@@ -173,10 +209,12 @@ spec:
           value: "default"
         - name: CANARY_DEPLOYMENT
           value: "trendtrove-app-v2"
-        - name: CANARY_POD_REGEX
-          value: "trendtrove-app-v2-.*"
+        - name: CANARY_SERVICE
+          value: "app-service-v2"
         - name: ERROR_RATE_THRESHOLD_PERCENT
           value: "5"
+        - name: RESTART_THRESHOLD
+          value: "1"
         - name: POLL_INTERVAL_SECONDS
           value: "30"
       volumeMounts:

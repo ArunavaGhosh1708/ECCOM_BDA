@@ -20,6 +20,11 @@ data:
         endpoint: jaeger:4317
         tls:
           insecure: true
+      loki:
+        endpoint: http://loki:3100/loki/api/v1/push
+        default_labels_enabled:
+          exporter: false
+          job: true
 
     service:
       pipelines:
@@ -27,6 +32,10 @@ data:
           receivers: [otlp]
           processors: [batch]
           exporters: [otlp]
+        logs:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [loki]
 ---
 apiVersion: apps/v1
 kind: Deployment
