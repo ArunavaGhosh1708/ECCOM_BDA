@@ -435,7 +435,7 @@
         "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
         "targets": [
           {
-            "expr": "{app=~\"cart-service|trendtrove-auth\"} | json | level=~\"ERROR|WARN\"",
+            "expr": "{app=~\"cart-service|trendtrove-auth|trendtrove-app-v3\"} | json | level=~\"ERROR|WARN\"",
             "refId": "A"
           }
         ],

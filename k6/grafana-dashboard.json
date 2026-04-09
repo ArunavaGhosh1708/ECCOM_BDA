@@ -18,7 +18,7 @@
         "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
         "targets": [
           {
-            "expr": "sum by (level) (rate({app=~\"trendtrove-app|trendtrove-auth|cart-service\"} | json | level != \"\" [1m]))",
+            "expr": "sum by (level) (rate({app=~\"trendtrove-app|trendtrove-app-v3|trendtrove-auth|cart-service\"} | json | level != \"\" [1m]))",
             "refId": "A",
             "legendFormat": "{{level}}"
           }
@@ -43,7 +43,7 @@
         "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
         "targets": [
           {
-            "expr": "topk(8, sum by (http_path) (rate({app=~\"trendtrove-app|trendtrove-auth|cart-service\"} | json | http_path != \"\" [1m])))",
+            "expr": "topk(8, sum by (http_path) (rate({app=~\"trendtrove-app|trendtrove-app-v3|trendtrove-auth|cart-service\"} | json | http_path != \"\" [1m])))",
             "refId": "A",
             "legendFormat": "{{http_path}}"
           }
@@ -61,7 +61,7 @@
         "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
         "targets": [
           {
-            "expr": "sum by (http_status_code) (count_over_time({app=~\"trendtrove-app|trendtrove-auth|cart-service\"} | json | http_status_code != \"\" [$__range]))",
+            "expr": "sum by (http_status_code) (count_over_time({app=~\"trendtrove-app|trendtrove-app-v3|trendtrove-auth|cart-service\"} | json | http_status_code != \"\" [$__range]))",
             "refId": "A",
             "legendFormat": "{{http_status_code}}",
             "instant": true
@@ -79,7 +79,7 @@
         "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
         "targets": [
           {
-            "expr": "sum(count_over_time({app=~\"trendtrove-app|trendtrove-auth|cart-service\"} | json | level=\"ERROR\" [$__range]))",
+            "expr": "sum(count_over_time({app=~\"trendtrove-app|trendtrove-app-v3|trendtrove-auth|cart-service\"} | json | level=\"ERROR\" [$__range]))",
             "refId": "A",
             "instant": true
           }
@@ -103,7 +103,7 @@
         "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
         "targets": [
           {
-            "expr": "sum(count_over_time({app=~\"trendtrove-app|trendtrove-auth|cart-service\"} | json | level=\"WARN\" [$__range]))",
+            "expr": "sum(count_over_time({app=~\"trendtrove-app|trendtrove-app-v3|trendtrove-auth|cart-service\"} | json | level=\"WARN\" [$__range]))",
             "refId": "A",
             "instant": true
           }
@@ -127,7 +127,7 @@
         "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
         "targets": [
           {
-            "expr": "{app=~\"trendtrove-app|trendtrove-auth|cart-service\"} | json | level=\"ERROR\"",
+            "expr": "{app=~\"trendtrove-app|trendtrove-app-v3|trendtrove-auth|cart-service\"} | json | level=\"ERROR\"",
             "refId": "A"
           }
         ],
@@ -145,7 +145,7 @@
         "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
         "targets": [
           {
-            "expr": "sum(count_over_time({app=~\"trendtrove-app|cart-service\"} | json | event=\"cart.item.added\" [$__range]))",
+            "expr": "sum(count_over_time({app=~\"trendtrove-app|trendtrove-app-v3|cart-service\"} | json | event=\"cart.item.added\" [$__range]))",
             "refId": "A",
             "instant": true
           }
@@ -169,7 +169,7 @@
         "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
         "targets": [
           {
-            "expr": "sum(count_over_time({app=~\"trendtrove-app|cart-service\"} | json | event=\"checkout.initiated\" [$__range]))",
+            "expr": "sum(count_over_time({app=~\"trendtrove-app|trendtrove-app-v3|cart-service\"} | json | event=\"checkout.initiated\" [$__range]))",
             "refId": "A",
             "instant": true
           }
@@ -193,7 +193,7 @@
         "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
         "targets": [
           {
-            "expr": "sum(count_over_time({app=~\"trendtrove-app|cart-service\"} | json | event=\"payment.initiated\" [$__range]))",
+            "expr": "sum(count_over_time({app=~\"trendtrove-app|trendtrove-app-v3|cart-service\"} | json | event=\"payment.initiated\" [$__range]))",
             "refId": "A",
             "instant": true
           }
@@ -217,17 +217,17 @@
         "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
         "targets": [
           {
-            "expr": "sum(rate({app=~\"trendtrove-app|cart-service\"} | json | event=\"cart.item.added\" [2m]))",
+            "expr": "sum(rate({app=~\"trendtrove-app|trendtrove-app-v3|cart-service\"} | json | event=\"cart.item.added\" [2m]))",
             "refId": "A",
             "legendFormat": "Items Added"
           },
           {
-            "expr": "sum(rate({app=~\"trendtrove-app|cart-service\"} | json | event=\"checkout.initiated\" [2m]))",
+            "expr": "sum(rate({app=~\"trendtrove-app|trendtrove-app-v3|cart-service\"} | json | event=\"checkout.initiated\" [2m]))",
             "refId": "B",
             "legendFormat": "Checkout Initiated"
           },
           {
-            "expr": "sum(rate({app=~\"trendtrove-app|cart-service\"} | json | event=\"payment.initiated\" [2m]))",
+            "expr": "sum(rate({app=~\"trendtrove-app|trendtrove-app-v3|cart-service\"} | json | event=\"payment.initiated\" [2m]))",
             "refId": "C",
             "legendFormat": "Payment Initiated"
           }
@@ -252,7 +252,7 @@
         "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
         "targets": [
           {
-            "expr": "sum by (category) (rate({app=~\"trendtrove-app|trendtrove-auth|cart-service\"} | json | category != \"\" [1m]))",
+            "expr": "sum by (category) (rate({app=~\"trendtrove-app|trendtrove-app-v3|trendtrove-auth|cart-service\"} | json | category != \"\" [1m]))",
             "refId": "A",
             "legendFormat": "{{category}}"
           }

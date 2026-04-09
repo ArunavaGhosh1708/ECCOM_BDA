@@ -1,0 +1,192 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: canary-controller-v3-script
+  namespace: default
+data:
+  canary_controller.py: |
+    import json
+    import os
+    import subprocess
+    import sys
+    import time
+    from urllib.parse import urlencode
+    from urllib.request import Request, urlopen
+
+    def prom_query(prom_url: str, query: str, timeout_s: int = 10) -> float:
+        url = f"{prom_url.rstrip('/')}/api/v1/query?{urlencode({'query': query})}"
+        req = Request(url, headers={"Accept": "application/json"})
+        with urlopen(req, timeout=timeout_s) as resp:
+            body = resp.read().decode("utf-8")
+        data = json.loads(body)
+        if data.get("status") != "success":
+            raise RuntimeError(f"Prometheus query failed: {data}")
+        result = data.get("data", {}).get("result", [])
+        if not result:
+            return 0.0
+        return float(result[0]["value"][1])
+
+    def run_kubectl_undo(namespace: str, deployment: str) -> None:
+        cmd = ["kubectl", "rollout", "undo", f"deployment/{deployment}", "-n", namespace]
+        print(f"[canary-controller-v3] running: {' '.join(cmd)}", flush=True)
+        proc = subprocess.run(cmd, capture_output=True, text=True)
+        print(f"[canary-controller-v3] kubectl exit={proc.returncode}", flush=True)
+        if proc.stdout:
+            print(f"[canary-controller-v3] stdout:\n{proc.stdout}", flush=True)
+        if proc.stderr:
+            print(f"[canary-controller-v3] stderr:\n{proc.stderr}", flush=True)
+        if proc.returncode != 0:
+            raise RuntimeError(f"kubectl rollout undo failed (exit={proc.returncode})")
+
+    def can_rollback(namespace: str) -> bool:
+        cmd = ["kubectl", "auth", "can-i", "patch", "deployments", "-n", namespace]
+        proc = subprocess.run(cmd, capture_output=True, text=True)
+        out = (proc.stdout or "").strip().lower()
+        return out == "yes"
+
+    def main() -> None:
+        prom_url = os.environ.get("PROMETHEUS_URL", "http://prometheus-kube-prometheus-prometheus:9090")
+        namespace = os.environ.get("NAMESPACE", "default")
+        canary_deployment = os.environ.get("CANARY_DEPLOYMENT", "trendtrove-app-v3")
+        canary_service = os.environ.get("CANARY_SERVICE", "app-service-v3")
+        threshold_percent = float(os.environ.get("ERROR_RATE_THRESHOLD_PERCENT", "5"))
+        restart_threshold = int(os.environ.get("RESTART_THRESHOLD", "2"))
+        poll_interval_s = int(os.environ.get("POLL_INTERVAL_SECONDS", "30"))
+
+        pod_regex = f"{canary_deployment}-.*"
+        total_query = f'sum(http_requests_total{{service="{canary_service}"}}) or vector(0)'
+        error_query = (
+            f'sum(http_requests_total{{service="{canary_service}",status_code=~"5.."}}) or vector(0)'
+        )
+        restart_query = (
+            f'sum(kube_pod_container_status_restarts_total{{pod=~"{pod_regex}",namespace="{namespace}"}}) or vector(0)'
+        )
+
+        print(f"[canary-controller-v3] prom_url={prom_url}", flush=True)
+        print(f"[canary-controller-v3] canary_service={canary_service}", flush=True)
+        print(f"[canary-controller-v3] threshold_percent={threshold_percent}", flush=True)
+        print(f"[canary-controller-v3] restart_threshold={restart_threshold}", flush=True)
+        print(f"[canary-controller-v3] total_query={total_query}", flush=True)
+        print(f"[canary-controller-v3] error_query={error_query}", flush=True)
+        print(f"[canary-controller-v3] restart_query={restart_query}", flush=True)
+
+        prev_total = prom_query(prom_url, total_query)
+        prev_errors = prom_query(prom_url, error_query)
+        baseline_restarts = prom_query(prom_url, restart_query)
+        print(f"[canary-controller-v3] initial prev_total={prev_total}, prev_errors={prev_errors}, baseline_restarts={baseline_restarts}", flush=True)
+
+        while True:
+            time.sleep(poll_interval_s)
+
+            cur_total = prom_query(prom_url, total_query)
+            cur_errors = prom_query(prom_url, error_query)
+            cur_restarts = prom_query(prom_url, restart_query)
+
+            delta_total = cur_total - prev_total
+            delta_errors = cur_errors - prev_errors
+            delta_restarts = cur_restarts - baseline_restarts
+
+            prev_total = cur_total
+            prev_errors = cur_errors
+            if delta_restarts < 0:
+                print(
+                    f"[canary-controller-v3] pod replaced (restart counter reset); re-anchoring baseline "
+                    f"from {baseline_restarts:.0f} to {cur_restarts:.0f}",
+                    flush=True,
+                )
+                baseline_restarts = cur_restarts
+                delta_restarts = 0
+
+            # Signal 1: restart-based (catches crashes)
+            if delta_restarts >= restart_threshold:
+                print(
+                    f"[canary-controller-v3] RESTART threshold exceeded: {delta_restarts:.0f} restarts >= {restart_threshold}; undoing deployment {canary_deployment}",
+                    flush=True,
+                )
+                if not can_rollback(namespace):
+                    print("[canary-controller-v3] ERROR: no permission to rollback.", flush=True)
+                    return
+                run_kubectl_undo(namespace, canary_deployment)
+                return
+
+            # Signal 2: error-rate-based (catches 5xx when pod stays up)
+            if delta_total <= 0:
+                print(f"[canary-controller-v3] no new requests in window; restarts_since_start={delta_restarts:.0f}", flush=True)
+                continue
+
+            error_rate_percent = (delta_errors / delta_total) * 100.0
+            print(
+                f"[canary-controller-v3] delta_total={delta_total:.0f} delta_errors={delta_errors:.0f} "
+                f"error_rate_percent={error_rate_percent:.3f} restarts_since_start={delta_restarts:.0f}",
+                flush=True,
+            )
+
+            if error_rate_percent > threshold_percent:
+                print(
+                    f"[canary-controller-v3] ERROR rate exceeded: {error_rate_percent:.3f}% > {threshold_percent:.3f}%; undoing deployment {canary_deployment}",
+                    flush=True,
+                )
+                if not can_rollback(namespace):
+                    print(
+                        "[canary-controller-v3] ERROR: serviceaccount has no permission to rollback.",
+                        flush=True,
+                    )
+                    return
+                run_kubectl_undo(namespace, canary_deployment)
+                return
+
+    if __name__ == "__main__":
+        try:
+            main()
+        except Exception as e:
+            print(f"[canary-controller-v3] fatal error: {e}", file=sys.stderr, flush=True)
+            raise
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: canary-controller-v3
+  namespace: default
+spec:
+  serviceAccountName: canary-controller-sa
+  restartPolicy: Always
+  containers:
+    - name: canary-controller
+      image: python:3.12-slim
+      env:
+        - name: PROMETHEUS_URL
+          value: "http://prometheus-kube-prometheus-prometheus:9090"
+        - name: NAMESPACE
+          value: "default"
+        - name: CANARY_DEPLOYMENT
+          value: "trendtrove-app-v3"
+        - name: CANARY_SERVICE
+          value: "app-service-v3"
+        - name: ERROR_RATE_THRESHOLD_PERCENT
+          value: "5"
+        - name: RESTART_THRESHOLD
+          value: "1"
+        - name: POLL_INTERVAL_SECONDS
+          value: "30"
+      volumeMounts:
+        - name: script
+          mountPath: /opt/scripts
+          readOnly: true
+      command:
+        - sh
+        - -c
+        - |
+          set -e
+          apt-get update -y
+          apt-get install -y --no-install-recommends curl ca-certificates
+          KUBECTL_VERSION="v1.30.5"
+          curl -L --fail -o /usr/local/bin/kubectl "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
+          chmod +x /usr/local/bin/kubectl
+          python /opt/scripts/canary_controller.py
+  volumes:
+    - name: script
+      configMap:
+        name: canary-controller-v3-script
+        items:
+          - key: canary_controller.py
+            path: canary_controller.py

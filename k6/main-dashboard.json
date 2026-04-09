@@ -11,7 +11,7 @@
         "description": "HTTP requests handled by the app in the selected time window.",
         "gridPos": { "x": 0, "y": 0, "w": 4, "h": 4 },
         "datasource": { "type": "prometheus", "uid": "afh82c4dmf4sgc" },
-        "targets": [{ "expr": "sum(increase(http_requests_total{job=~\"app-service|app-service-v2\"}[$__range]))", "refId": "A", "instant": true }],
+        "targets": [{ "expr": "sum(increase(http_requests_total{job=~\"app-service|app-service-v2|app-service-v3\"}[$__range]))", "refId": "A", "instant": true }],
         "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "fixed", "fixedColor": "#5794F2" }, "thresholds": { "mode": "absolute", "steps": [{ "value": 0, "color": "#5794F2" }] } } },
         "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none", "textMode": "auto" }
       },
@@ -20,7 +20,7 @@
         "description": "% of requests that returned a 4xx or 5xx response.",
         "gridPos": { "x": 4, "y": 0, "w": 4, "h": 4 },
         "datasource": { "type": "prometheus", "uid": "afh82c4dmf4sgc" },
-        "targets": [{ "expr": "sum(increase(http_requests_total{job=~\"app-service|app-service-v2\", status_code=~\"[45]..\"}[$__range])) / sum(increase(http_requests_total{job=~\"app-service|app-service-v2\"}[$__range])) * 100", "refId": "A", "instant": true }],
+        "targets": [{ "expr": "sum(increase(http_requests_total{job=~\"app-service|app-service-v2|app-service-v3\", status_code=~\"[45]..\"}[$__range])) / sum(increase(http_requests_total{job=~\"app-service|app-service-v2|app-service-v3\"}[$__range])) * 100", "refId": "A", "instant": true }],
         "fieldConfig": { "defaults": { "unit": "percent", "decimals": 1, "thresholds": { "mode": "absolute", "steps": [{ "value": 0, "color": "green" }, { "value": 2, "color": "orange" }, { "value": 5, "color": "red" }] }, "color": { "mode": "thresholds" } } },
         "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" }
       },
@@ -38,7 +38,7 @@
         "description": "Items added to cart — a direct measure of purchase intent.",
         "gridPos": { "x": 12, "y": 0, "w": 4, "h": 4 },
         "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
-        "targets": [{ "expr": "sum(count_over_time({app=~\"trendtrove-app|cart-service\"} | json | event=\"cart.item.added\" [$__range]))", "refId": "A", "instant": true }],
+        "targets": [{ "expr": "sum(count_over_time({app=~\"trendtrove-app|trendtrove-app-v3|cart-service\"} | json | event=\"cart.item.added\" [$__range]))", "refId": "A", "instant": true }],
         "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "fixed", "fixedColor": "#73BF69" }, "thresholds": { "mode": "absolute", "steps": [{ "value": 0, "color": "#73BF69" }] } } },
         "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" }
       },
@@ -47,7 +47,7 @@
         "description": "Users who reached the checkout page.",
         "gridPos": { "x": 16, "y": 0, "w": 4, "h": 4 },
         "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
-        "targets": [{ "expr": "sum(count_over_time({app=~\"trendtrove-app|cart-service\"} | json | event=\"checkout.initiated\" [$__range]))", "refId": "A", "instant": true }],
+        "targets": [{ "expr": "sum(count_over_time({app=~\"trendtrove-app|trendtrove-app-v3|cart-service\"} | json | event=\"checkout.initiated\" [$__range]))", "refId": "A", "instant": true }],
         "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "fixed", "fixedColor": "#8AB8FF" }, "thresholds": { "mode": "absolute", "steps": [{ "value": 0, "color": "#8AB8FF" }] } } },
         "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" }
       },
@@ -56,7 +56,7 @@
         "description": "Stripe checkout sessions created — the bottom of the purchase funnel.",
         "gridPos": { "x": 20, "y": 0, "w": 4, "h": 4 },
         "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
-        "targets": [{ "expr": "sum(count_over_time({app=~\"trendtrove-app|cart-service\"} | json | event=\"payment.initiated\" [$__range]))", "refId": "A", "instant": true }],
+        "targets": [{ "expr": "sum(count_over_time({app=~\"trendtrove-app|trendtrove-app-v3|cart-service\"} | json | event=\"payment.initiated\" [$__range]))", "refId": "A", "instant": true }],
         "fieldConfig": { "defaults": { "unit": "short", "color": { "mode": "fixed", "fixedColor": "#FADE2A" }, "thresholds": { "mode": "absolute", "steps": [{ "value": 0, "color": "#FADE2A" }] } } },
         "options": { "reduceOptions": { "calcs": ["lastNotNull"] }, "colorMode": "background", "graphMode": "none" }
       },
@@ -68,7 +68,7 @@
         "gridPos": { "x": 0, "y": 5, "w": 15, "h": 10 },
         "datasource": { "type": "prometheus", "uid": "afh82c4dmf4sgc" },
         "targets": [
-          { "expr": "topk(8, sum by (route) (rate(http_requests_total{job=~\"app-service|app-service-v2\"}[1m])))", "refId": "A", "legendFormat": "{{route}}" }
+          { "expr": "topk(8, sum by (route) (rate(http_requests_total{job=~\"app-service|app-service-v2|app-service-v3\"}[1m])))", "refId": "A", "legendFormat": "{{route}}" }
         ],
         "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "lineWidth": 2, "fillOpacity": 8 } } },
         "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max"] } }
@@ -79,7 +79,7 @@
         "gridPos": { "x": 15, "y": 5, "w": 9, "h": 10 },
         "datasource": { "type": "prometheus", "uid": "afh82c4dmf4sgc" },
         "targets": [
-          { "expr": "sum by (status_code) (increase(http_requests_total{job=~\"app-service|app-service-v2\"}[$__range]))", "refId": "A", "legendFormat": "{{status_code}}", "instant": true }
+          { "expr": "sum by (status_code) (increase(http_requests_total{job=~\"app-service|app-service-v2|app-service-v3\"}[$__range]))", "refId": "A", "legendFormat": "{{status_code}}", "instant": true }
         ],
         "fieldConfig": {
           "overrides": [
@@ -121,6 +121,7 @@
         "targets": [
           { "expr": "nodejs_eventloop_lag_p99_seconds{job=\"app-service\"} * 1000",    "refId": "A", "legendFormat": "app — p99" },
           { "expr": "nodejs_eventloop_lag_p99_seconds{job=\"app-service-v2\"} * 1000", "refId": "B", "legendFormat": "app-v2 — p99" },
+          { "expr": "nodejs_eventloop_lag_p99_seconds{job=\"app-service-v3\"} * 1000", "refId": "D", "legendFormat": "app-v3 — p99" },
           { "expr": "nodejs_eventloop_lag_mean_seconds{job=\"app-service\"} * 1000",   "refId": "C", "legendFormat": "app — mean" }
         ],
         "fieldConfig": {
@@ -131,6 +132,7 @@
           "overrides": [
             { "matcher": { "id": "byName", "options": "app — p99" },  "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#5794F2" } }] },
             { "matcher": { "id": "byName", "options": "app-v2 — p99" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#B877D9" } }] },
+            { "matcher": { "id": "byName", "options": "app-v3 — p99" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#FF6600" } }] },
             { "matcher": { "id": "byName", "options": "app — mean" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#8AB8FF" } }, { "id": "custom.lineStyle", "value": { "dash": [4,4], "fill": "dash" } }] }
           ]
         },
@@ -144,7 +146,7 @@
         "gridPos": { "x": 0, "y": 26, "w": 11, "h": 9 },
         "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
         "targets": [
-          { "expr": "sum by (level) (rate({app=~\"trendtrove-app|trendtrove-auth|cart-service\"} | json | level != \"\" [1m]))", "refId": "A", "legendFormat": "{{level}}" }
+          { "expr": "sum by (level) (rate({app=~\"trendtrove-app|trendtrove-app-v3|trendtrove-auth|cart-service\"} | json | level != \"\" [1m]))", "refId": "A", "legendFormat": "{{level}}" }
         ],
         "fieldConfig": {
           "defaults": { "unit": "reqps", "custom": { "lineWidth": 2, "fillOpacity": 8 } },
@@ -163,7 +165,7 @@
         "gridPos": { "x": 11, "y": 26, "w": 7, "h": 9 },
         "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
         "targets": [
-          { "expr": "topk(8, sum by (http_path) (count_over_time({app=~\"trendtrove-app|trendtrove-auth|cart-service\"} | json | http_path != \"\" [$__range])))", "refId": "A", "legendFormat": "{{http_path}}", "instant": true }
+          { "expr": "topk(8, sum by (http_path) (count_over_time({app=~\"trendtrove-app|trendtrove-app-v3|trendtrove-auth|cart-service\"} | json | http_path != \"\" [$__range])))", "refId": "A", "legendFormat": "{{http_path}}", "instant": true }
         ],
         "transformations": [
           { "id": "reduce", "options": { "reducers": ["sum"] } },
@@ -178,7 +180,7 @@
         "gridPos": { "x": 18, "y": 26, "w": 6, "h": 9 },
         "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
         "targets": [
-          { "expr": "{app=~\"trendtrove-app|trendtrove-auth|cart-service\"} | json | level=\"ERROR\"", "refId": "A" }
+          { "expr": "{app=~\"trendtrove-app|trendtrove-app-v3|trendtrove-auth|cart-service\"} | json | level=\"ERROR\"", "refId": "A" }
         ],
         "options": { "dedupStrategy": "none", "showLabels": false, "showTime": true, "sortOrder": "Descending", "wrapLogMessage": true, "prettifyLogMessage": false }
       },
@@ -190,9 +192,9 @@
         "gridPos": { "x": 0, "y": 36, "w": 14, "h": 9 },
         "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
         "targets": [
-          { "expr": "sum(rate({app=~\"trendtrove-app|cart-service\"} | json | event=\"cart.item.added\" [2m]))",    "refId": "A", "legendFormat": "1. Item Added to Cart" },
-          { "expr": "sum(rate({app=~\"trendtrove-app|cart-service\"} | json | event=\"checkout.initiated\" [2m]))", "refId": "B", "legendFormat": "2. Checkout Initiated" },
-          { "expr": "sum(rate({app=~\"trendtrove-app|cart-service\"} | json | event=\"payment.initiated\" [2m]))",  "refId": "C", "legendFormat": "3. Payment Initiated" }
+          { "expr": "sum(rate({app=~\"trendtrove-app|trendtrove-app-v3|cart-service\"} | json | event=\"cart.item.added\" [2m]))",    "refId": "A", "legendFormat": "1. Item Added to Cart" },
+          { "expr": "sum(rate({app=~\"trendtrove-app|trendtrove-app-v3|cart-service\"} | json | event=\"checkout.initiated\" [2m]))", "refId": "B", "legendFormat": "2. Checkout Initiated" },
+          { "expr": "sum(rate({app=~\"trendtrove-app|trendtrove-app-v3|cart-service\"} | json | event=\"payment.initiated\" [2m]))",  "refId": "C", "legendFormat": "3. Payment Initiated" }
         ],
         "fieldConfig": {
           "defaults": { "unit": "reqps", "custom": { "lineWidth": 2, "fillOpacity": 12 } },
@@ -210,7 +212,7 @@
         "gridPos": { "x": 14, "y": 36, "w": 10, "h": 9 },
         "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
         "targets": [
-          { "expr": "sum by (category) (rate({app=~\"trendtrove-app|trendtrove-auth|cart-service\"} | json | category != \"\" [1m]))", "refId": "A", "legendFormat": "{{category}}" }
+          { "expr": "sum by (category) (rate({app=~\"trendtrove-app|trendtrove-app-v3|trendtrove-auth|cart-service\"} | json | category != \"\" [1m]))", "refId": "A", "legendFormat": "{{category}}" }
         ],
         "fieldConfig": { "defaults": { "unit": "reqps", "custom": { "lineWidth": 2, "fillOpacity": 8 } } },
         "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
@@ -226,7 +228,8 @@
           { "expr": "sum(rate({app=\"trendtrove-app\"}     | json | level=\"ERROR\" [1m]))", "refId": "A", "legendFormat": "app-service" },
           { "expr": "sum(rate({app=\"trendtrove-auth\"}    | json | level=\"ERROR\" [1m]))", "refId": "B", "legendFormat": "auth-service" },
           { "expr": "sum(rate({app=\"cart-service\"}       | json | level=\"ERROR\" [1m]))", "refId": "C", "legendFormat": "cart-service" },
-          { "expr": "sum(rate({app=\"trendtrove-app-v2\"} | json | level=\"ERROR\" [1m]))", "refId": "D", "legendFormat": "app-v2 (canary)" }
+          { "expr": "sum(rate({app=\"trendtrove-app-v2\"} | json | level=\"ERROR\" [1m]))", "refId": "D", "legendFormat": "app-v2 (canary)" },
+          { "expr": "sum(rate({app=\"trendtrove-app-v3\"} | json | level=\"ERROR\" [1m]))", "refId": "E", "legendFormat": "app-v3 (canary)" }
         ],
         "fieldConfig": {
           "defaults": { "unit": "reqps", "custom": { "lineWidth": 2, "fillOpacity": 10 } },
@@ -234,7 +237,8 @@
             { "matcher": { "id": "byName", "options": "app-service" },     "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#F2495C" } }] },
             { "matcher": { "id": "byName", "options": "auth-service" },    "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#FF9830" } }] },
             { "matcher": { "id": "byName", "options": "cart-service" },    "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#FADE2A" } }] },
-            { "matcher": { "id": "byName", "options": "app-v2 (canary)" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#B877D9" } }] }
+            { "matcher": { "id": "byName", "options": "app-v2 (canary)" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#B877D9" } }] },
+            { "matcher": { "id": "byName", "options": "app-v3 (canary)" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "#FF6600" } }] }
           ]
         },
         "options": { "legend": { "displayMode": "list", "placement": "bottom" } }
