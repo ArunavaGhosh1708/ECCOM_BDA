@@ -20,6 +20,4 @@ prometheus:
               storage: 5Gi
 
 grafana:
-  persistence:
-    enabled: true
-    size: 2Gi
+  enabled: false
