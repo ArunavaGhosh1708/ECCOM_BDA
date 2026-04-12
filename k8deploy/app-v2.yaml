@@ -36,7 +36,7 @@ spec:
             - name: SERVICE_NAME
               value: app-service-v2
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: http://otel-collector:4318/v1/traces
+              value: http://otel-collector:4318
             - name: PRODUCT_SERVICE_URL
               value: http://product-service:3000
             - name: CART_SERVICE_URL

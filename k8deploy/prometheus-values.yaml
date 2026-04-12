@@ -1,0 +1,25 @@
+# Helm values for kube-prometheus-stack with persistent storage
+#
+# Install / upgrade:
+#   helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+#   helm repo update
+#   helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
+#     -n ecommerce --create-namespace \
+#     -f k8deploy/prometheus-values.yaml
+
+prometheus:
+  prometheusSpec:
+    retention: 7d
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 5Gi
+
+grafana:
+  persistence:
+    enabled: true
+    size: 2Gi

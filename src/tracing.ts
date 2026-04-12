@@ -5,11 +5,12 @@ import { Resource } from '@opentelemetry/resources';
 import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 
 export function initTracing(serviceName: string): void {
-    const exporterUrl =
-        process.env.OTEL_EXPORTER_OTLP_ENDPOINT ??
-        'http://otel-collector:4318/v1/traces';
+    const endpoint =
+        process.env.OTEL_EXPORTER_OTLP_ENDPOINT ?? 'http://otel-collector:4318';
 
-    const exporter = new OTLPTraceExporter({ url: exporterUrl });
+    const exporter = new OTLPTraceExporter({
+        url: `${endpoint}/v1/traces`,
+    });
 
     const sdk = new NodeSDK({
         resource: new Resource({

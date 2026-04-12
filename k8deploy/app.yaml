@@ -30,6 +30,10 @@ spec:
               cpu: 500m
               memory: 512Mi
           env:
+            - name: SERVICE_NAME
+              value: app-service
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://otel-collector:4318
             - name: AUTH_SERVICE_URL
               value: http://auth-service:3000
             - name: PRODUCT_SERVICE_URL

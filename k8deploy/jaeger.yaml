@@ -1,0 +1,104 @@
+# ──────────────────────────────────────────────────────────────────────────────
+# Jaeger  –  distributed tracing backend (all-in-one with Badger persistence)
+# ──────────────────────────────────────────────────────────────────────────────
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: jaeger-pvc
+  namespace: default
+  labels:
+    app: jaeger
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jaeger
+  namespace: default
+  labels:
+    app: jaeger
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate # Badger holds file locks; old pod must stop before new one starts
+  selector:
+    matchLabels:
+      app: jaeger
+  template:
+    metadata:
+      labels:
+        app: jaeger
+    spec:
+      containers:
+        - name: jaeger
+          image: jaegertracing/all-in-one:1.56
+          env:
+            - name: SPAN_STORAGE_TYPE
+              value: badger
+            - name: BADGER_EPHEMERAL
+              value: "false"
+            - name: BADGER_DIRECTORY_VALUE
+              value: /badger/data
+            - name: BADGER_DIRECTORY_KEY
+              value: /badger/key
+          ports:
+            - name: grpc-otlp
+              containerPort: 4317
+            - name: http-query
+              containerPort: 16686
+          volumeMounts:
+            - name: jaeger-storage
+              mountPath: /badger
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 14269
+            initialDelaySeconds: 5
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+      volumes:
+        - name: jaeger-storage
+          persistentVolumeClaim:
+            claimName: jaeger-pvc
+---
+# Collector endpoint — OTel Collector exports traces to jaeger:4317
+apiVersion: v1
+kind: Service
+metadata:
+  name: jaeger
+  namespace: default
+  labels:
+    app: jaeger
+spec:
+  selector:
+    app: jaeger
+  ports:
+    - name: grpc-otlp
+      port: 4317
+      targetPort: 4317
+---
+# Query UI — kubectl port-forward svc/jaeger-query 16686:16686
+apiVersion: v1
+kind: Service
+metadata:
+  name: jaeger-query
+  namespace: default
+  labels:
+    app: jaeger
+spec:
+  selector:
+    app: jaeger
+  ports:
+    - name: http-query
+      port: 16686
+      targetPort: 16686

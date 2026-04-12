@@ -8,10 +8,22 @@ Step-by-step guide to execute the full demo: v1 (healthy) -> v2 (broken auth) ->
 
 Make sure the following are already running on the cluster:
 - PostgreSQL, MongoDB (data layer)
-- Prometheus + kube-state-metrics (metrics)
+- Prometheus + Grafana + kube-state-metrics (metrics & dashboards — via Helm)
 - Loki + Promtail (logs)
-- Grafana (dashboards)
-- OTel Collector + Jaeger (traces)
+- Jaeger (traces)
+- OTel Collector (trace pipeline)
+
+### Install Prometheus + Grafana with persistent storage
+
+```bash
+helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo update
+helm upgrade --install prometheus prometheus-community/kube-prometheus-stack \
+  -n ecommerce --create-namespace \
+  -f k8deploy/prometheus-values.yaml
+```
+
+This creates persistent volumes for Prometheus TSDB (5Gi) and Grafana (2Gi) so data survives pod restarts.
 
 ```bash
 # Verify core infra is up
@@ -51,6 +63,7 @@ kubectl apply -f k8deploy/mail.yaml
 kubectl apply -f k8deploy/ingress.yaml
 kubectl apply -f k8deploy/servicemonitors.yaml
 kubectl apply -f k8deploy/loki-stack.yaml
+kubectl apply -f k8deploy/jaeger.yaml
 kubectl apply -f k8deploy/otel-collector.yaml
 ```
 
