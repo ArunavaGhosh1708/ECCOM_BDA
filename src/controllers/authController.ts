@@ -112,6 +112,7 @@ export function getLogout(
         req.session.destroy((err: Error) => {
             if (err !== undefined) {
                 next(err);
+                return;
             }
             logTelemetry(
                 req,
