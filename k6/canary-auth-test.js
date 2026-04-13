@@ -5,11 +5,11 @@
  * Run with:  k6 run k6/canary-auth-test.js
  *
  * What this does:
- *  - Hammers /auth routes so the 10% canary weight sends enough traffic to v2
+ *  - Hammers /auth routes so the ~80% canary weight sends enough traffic to v2
  *  - Runs valid signup→login flows (these 500 on v2, succeed on v1)
  *  - Runs bad-credential attempts (reveal the difference between v2 broken 500
  *    vs v1 proper 302-to-login redirect)
- *  - Injects labelled chaos events via /auth/chaos/log so you get named log
+ *  - Injects labelled chaos events via /chaos/log so you get named log
  *    entries in Loki with level=ERROR and event=auth.* labels
  *  - Prints a per-scenario summary table at the end
  *
@@ -39,7 +39,7 @@ const authLatency     = new Trend('auth_latency_ms', true);
 // ── Scenarios ─────────────────────────────────────────────────────────────────
 export const options = {
     scenarios: {
-        // Ramps up valid user flows through /auth — 10% will hit v2 and get 500
+        // Ramps up valid user flows through /auth — ~80% will hit v2 and get 500
         valid_auth_flow: {
             executor: 'ramping-vus',
             startVUs: 0,
@@ -66,7 +66,10 @@ export const options = {
         },
 
         // Inject named auth ERROR/WARN events directly into Loki via the
-        // /auth/chaos/log endpoint so you have readable labels in Grafana
+        // /chaos/log endpoint so you have readable labels in Grafana
+        // NOTE: must use /chaos/log (root), NOT /auth/chaos/log — the /auth
+        // prefix would be intercepted by failureInjectionMiddleware on v2 and
+        // return 500 before the chaos endpoint ever runs.
         chaos_auth_events: {
             executor: 'constant-arrival-rate',
             rate: 3,
@@ -81,9 +84,9 @@ export const options = {
     thresholds: {
         // These are intentionally loose — v2 is broken, we expect failures
         http_req_duration:   ['p(95)<5000'],
-        // Alert if MORE than 20% of ALL auth requests are 5xx
-        // (should hover around 10% — the canary weight — if only v2 is broken)
-        auth_5xx_rate:       ['rate<0.5'],
+        // Alert if MORE than 95% of ALL auth requests are 5xx
+        // (should hover around 80% — the canary weight — since v2 fails every /auth request)
+        auth_5xx_rate:       ['rate<0.95'],
     },
 };
 
@@ -275,7 +278,7 @@ export function chaosAuthEvents() {
     ];
 
     const e = pick(events);
-    const url = `${BASE_URL}/auth/chaos/log`
+    const url = `${BASE_URL}/chaos/log`
         + `?level=${e.level}`
         + `&category=${encodeURIComponent(e.category)}`
         + `&event=${encodeURIComponent(e.event)}`
@@ -301,14 +304,14 @@ export function handleSummary(data) {
     const p95Latency  = m['auth_latency_ms']        ? m['auth_latency_ms'].values['p(95)']  : 0;
     const totalReqs   = m['http_reqs']              ? m['http_reqs'].values.count            : 0;
 
-    const canaryHitEstimate = Math.round(total5xx + totalRedir + totalOk) * 0.1;
+    const canaryHitEstimate = Math.round(total5xx + totalRedir + totalOk) * 0.8;
 
     const summary = `
 ╔══════════════════════════════════════════════════════════╗
 ║           CANARY v2 AUTH TEST — SUMMARY                 ║
 ╠══════════════════════════════════════════════════════════╣
 ║  Total HTTP requests sent       : ${String(totalReqs).padEnd(20)}   ║
-║  Estimated v2 canary hits (~10%): ${String(Math.round(canaryHitEstimate)).padEnd(20)}   ║
+║  Estimated v2 canary hits (~80%): ${String(Math.round(canaryHitEstimate)).padEnd(20)}   ║
 ╠══════════════════════════════════════════════════════════╣
 ║  LOGIN RESULTS                                          ║
 ║    Success (200/302 v1 or v2)   : ${String(totalOk).padEnd(20)}   ║

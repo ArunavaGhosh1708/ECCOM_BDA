@@ -106,7 +106,7 @@
         "gridPos": { "x": 12, "y": 1, "w": 6, "h": 6 },
         "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
         "targets": [{
-          "expr": "sum(count_over_time({app=\"trendtrove-app-v2\"} | json | level=\"ERROR\" [5m]))",
+          "expr": "sum(count_over_time({app=\"trendtrove-app-v2\", level=\"ERROR\"} [5m]))",
           "refId": "A",
           "instant": true
         }],
@@ -145,7 +145,7 @@
         "gridPos": { "x": 18, "y": 1, "w": 6, "h": 6 },
         "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
         "targets": [{
-          "expr": "sum(rate({app=\"trendtrove-app-v2\"} | json | level=\"ERROR\" [2m]))",
+          "expr": "sum(rate({app=\"trendtrove-app-v2\", level=\"ERROR\"} [2m]))",
           "refId": "A",
           "instant": true
         }],
@@ -396,17 +396,17 @@
         "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
         "targets": [
           {
-            "expr": "sum(rate({app=\"trendtrove-app\"} | json | level=\"ERROR\" [$__rate_interval]))",
+            "expr": "sum(rate({app=\"trendtrove-app\", level=\"ERROR\"} [$__rate_interval]))",
             "refId": "A",
             "legendFormat": "v1 — errors/s"
           },
           {
-            "expr": "sum(rate({app=\"trendtrove-app-v2\"} | json | level=\"ERROR\" [$__rate_interval]))",
+            "expr": "sum(rate({app=\"trendtrove-app-v2\", level=\"ERROR\"} [$__rate_interval]))",
             "refId": "B",
             "legendFormat": "v2 — errors/s (auth failure)"
           },
           {
-            "expr": "sum(rate({app=\"trendtrove-app-v2\"} | json | event=\"service.unavailable\" [$__rate_interval]))",
+            "expr": "sum(rate({app=\"trendtrove-app-v2\", event=\"service.unavailable\"} [$__rate_interval]))",
             "refId": "C",
             "legendFormat": "v2 — service.unavailable events/s"
           }
@@ -495,7 +495,7 @@
         "gridPos": { "x": 0, "y": 36, "w": 14, "h": 10 },
         "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
         "targets": [{
-          "expr": "{app=\"trendtrove-app-v2\"} | json | level=\"ERROR\"",
+          "expr": "{app=\"trendtrove-app-v2\", level=\"ERROR\"}",
           "refId": "A"
         }],
         "options": {
@@ -518,7 +518,7 @@
         "gridPos": { "x": 14, "y": 36, "w": 10, "h": 10 },
         "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
         "targets": [{
-          "expr": "{app=\"trendtrove-app\"} | json | level=~\"WARN|ERROR\"",
+          "expr": "{app=\"trendtrove-app\", level=~\"WARN|ERROR\"}",
           "refId": "A"
         }],
         "options": {
@@ -628,7 +628,7 @@
         "gridPos": { "x": 16, "y": 47, "w": 8, "h": 6 },
         "datasource": { "type": "loki", "uid": "ffh82mih4h2pse" },
         "targets": [{
-          "expr": "sum by (event, level) (count_over_time({app=\"trendtrove-app-v2\"} | json | level!=\"INFO\" [$__range]))",
+          "expr": "sum by (event, level) (count_over_time({app=\"trendtrove-app-v2\", level!=\"INFO\"} [$__range]))",
           "refId": "A",
           "instant": true,
           "legendFormat": "{{level}} — {{event}}"
