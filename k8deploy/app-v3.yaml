@@ -12,6 +12,7 @@ spec:
       labels:
         app: trendtrove-app-v3
     spec:
+      terminationGracePeriodSeconds: 60
       containers:
         - name: app
           image: us-central1-docker.pkg.dev/canaryguard-bda/canaryguard/trendtrove-app:v3
@@ -40,6 +41,8 @@ spec:
               value: http://auth-service:3000
             - name: PRODUCT_SERVICE_URL
               value: http://product-service:3000
+            - name: CART_SERVICE_URL
+              value: http://cart-service:3000
             - name: MAIL_SERVICE_URL
               value: http://mail-service:3000
 ---

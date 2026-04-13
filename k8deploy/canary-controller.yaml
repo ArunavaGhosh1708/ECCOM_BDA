@@ -214,7 +214,7 @@ spec:
         - name: ERROR_RATE_THRESHOLD_PERCENT
           value: "5"
         - name: RESTART_THRESHOLD
-          value: "1"
+          value: "3"
         - name: POLL_INTERVAL_SECONDS
           value: "30"
       volumeMounts:
