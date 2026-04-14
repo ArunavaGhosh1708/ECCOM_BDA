@@ -141,3 +141,4 @@ public/css/.DS_Store
 public/fonts/icomoon/.DS_Store
 
 .DS_Store
+k8deploy/secrets.local.yaml
