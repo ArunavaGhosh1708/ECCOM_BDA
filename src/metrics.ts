@@ -6,6 +6,7 @@ export const register = new Registry();
 collectDefaultMetrics({ register });
 
 const serviceName = process.env.SERVICE_NAME ?? 'app-service';
+const AUTH_PATH_PREFIXES = ['/login', '/signup', '/logout', '/google'];
 
 export const httpRequestsTotal = new Counter({
     name: 'http_requests_total',
@@ -31,7 +32,13 @@ export function metricsMiddleware(
 
     res.on('finish', () => {
         const duration = (Date.now() - start) / 1000;
-        const route = (req.route?.path as string | undefined) ?? req.path ?? 'unknown';
+        const routePath = (req.route?.path as string | undefined) ?? '';
+        const mountedRoute = `${req.baseUrl ?? ''}${routePath}`;
+        const requestPath = (req.originalUrl ?? req.url ?? req.path ?? 'unknown').split('?')[0];
+        let route = mountedRoute !== '' ? mountedRoute : requestPath;
+        if (AUTH_PATH_PREFIXES.some((prefix) => route === prefix || route.startsWith(`${prefix}/`))) {
+            route = `/auth${route}`;
+        }
         const labels = {
             method: req.method,
             route,

@@ -3,13 +3,26 @@ import { logTelemetry } from '../telemetry/logger';
 import type { RequestWithTelemetry } from '../types/telemetry';
 
 const FAIL_MODE = process.env.FAIL_MODE ?? 'none';
+const AUTH_PATH_PREFIXES = ['/login', '/signup', '/logout', '/google'];
+
+function getPathname(req: Request): string {
+    return (req.originalUrl ?? req.url ?? req.path ?? 'unknown').split('?')[0];
+}
+
+function isAuthRequest(req: Request): boolean {
+    const path = getPathname(req);
+    return (
+        path.startsWith('/auth') ||
+        AUTH_PATH_PREFIXES.some((prefix) => path === prefix || path.startsWith(`${prefix}/`))
+    );
+}
 
 export default function failureInjectionMiddleware(
     req: Request,
     res: Response,
     next: NextFunction
 ): void {
-    if (FAIL_MODE === 'auth' && req.path.startsWith('/auth')) {
+    if (FAIL_MODE === 'auth' && isAuthRequest(req)) {
         logTelemetry(
             req as RequestWithTelemetry,
             res,

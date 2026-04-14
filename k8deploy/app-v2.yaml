@@ -15,7 +15,7 @@ spec:
       terminationGracePeriodSeconds: 60
       containers:
         - name: app
-          image: us-central1-docker.pkg.dev/canaryguard-bda/canaryguard/trendtrove-app:v2
+          image: us-central1-docker.pkg.dev/canaryguard-bda/canaryguard/trendtrove-app:v2-20260413-190159
           ports:
             - containerPort: 3000
           envFrom:
