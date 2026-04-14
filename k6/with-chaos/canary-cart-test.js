@@ -1,0 +1,171 @@
+/**
+ * canary-cart-test.js  (with chaos log injection)
+ *
+ * Targets the v3 canary to surface cart failures in Grafana/Loki.
+ * Runs real signup→login→add-to-cart→checkout flows AND injects named
+ * chaos events into Loki via /cart/chaos/log for readable labels.
+ *
+ * Run with:  k6 run k6/with-chaos/canary-cart-test.js
+ *
+ * Grafana queries:
+ *   Loki:       {app="trendtrove-app-v3", level="ERROR"}
+ *   Loki:       {service="app-service-v3"} | json | event=~"cart.*"
+ *   Prometheus: rate(http_requests_total{status_code=~"5..",service="app-service-v3"}[1m])
+ */
+
+import http from 'k6/http';
+import { sleep, check } from 'k6';
+import { Rate, Counter, Trend } from 'k6/metrics';
+
+const BASE_URL = __ENV.BASE_URL || 'http://34.122.199.244.nip.io';
+
+const errorRate        = new Rate('error_rate');
+const cart5xxRate      = new Rate('cart_5xx_rate');
+const cartAdditions    = new Counter('cart_additions');
+const checkoutAttempts = new Counter('checkout_attempts');
+const cartLatency      = new Trend('cart_latency_ms');
+
+let total2xx = 0, total5xx = 0;
+let cartOk = 0, cart5xx = 0;
+
+export const options = {
+    scenarios: {
+        cart_flow: {
+            executor: 'ramping-vus',
+            startVUs: 0,
+            stages: [
+                { duration: '20s', target: 5 },
+                { duration: '2m',  target: 5 },
+                { duration: '10s', target: 0 },
+            ],
+            exec: 'cartFlow',
+        },
+        chaos_cart_events: {
+            executor: 'constant-arrival-rate',
+            rate: 3,
+            timeUnit: '10s',
+            duration: '2m30s',
+            preAllocatedVUs: 2,
+            exec: 'chaosCartEvents',
+        },
+    },
+    thresholds: {
+        http_req_failed: ['rate<0.25'],
+        cart_5xx_rate:   ['rate<0.20'],
+    },
+};
+
+const PRODUCT_IDS = [1, 2, 3, 4, 5, 6];
+const SIZES = ['S', 'M', 'L'];
+
+function randInt(min, max)   { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function randFloat(min, max) { return Math.random() * (max - min) + min; }
+function randomProduct()     { return PRODUCT_IDS[Math.floor(Math.random() * PRODUCT_IDS.length)]; }
+
+// ─── Scenario 1: Signup → Login → Add to cart → View cart → Checkout ─────
+export function cartFlow() {
+    const jar    = http.cookieJar();
+    const params = { jar, redirects: 5 };
+
+    const email    = `cart_test_${__VU}_${__ITER}@loadtest.io`;
+    const password = 'Password123!';
+
+    let res = http.post(`${BASE_URL}/auth/signup`,
+        { name: `Cart Tester ${__VU}`, email, password, confirmPassword: password },
+        params
+    );
+    const is5xx = res.status >= 500;
+    errorRate.add(is5xx);
+    check(res, { 'signup: not 5xx (v3 auth should work)': (r) => r.status < 500 });
+    if (is5xx) { total5xx++; } else { total2xx++; }
+
+    sleep(randFloat(0.5, 1));
+
+    res = http.post(`${BASE_URL}/auth/login`, { email, password }, params);
+    errorRate.add(res.status >= 500);
+    check(res, { 'login: not 5xx': (r) => r.status < 500 });
+
+    sleep(randFloat(0.5, 1));
+
+    http.get(`${BASE_URL}/products`, params);
+    sleep(randFloat(0.3, 0.8));
+
+    const addCount = randInt(1, 3);
+    for (let i = 0; i < addCount; i++) {
+        const id    = randomProduct();
+        const start = Date.now();
+        res = http.post(
+            `${BASE_URL}/cart/product/${id}/create`,
+            { productId: String(id), quantity: '1', size: SIZES[randInt(0, 2)] },
+            params
+        );
+        cartLatency.add(Date.now() - start);
+        const cartFail = res.status >= 500;
+        cart5xxRate.add(cartFail);
+        errorRate.add(cartFail);
+        check(res, { 'cart add: not 5xx (v3 broken if fails)': (r) => !cartFail });
+        if (cartFail) { cart5xx++; } else { cartOk++; cartAdditions.add(1); }
+        sleep(randFloat(0.3, 0.8));
+    }
+
+    res = http.get(`${BASE_URL}/cart`, params);
+    cart5xxRate.add(res.status >= 500);
+    check(res, { 'cart view: not 5xx': (r) => r.status < 500 });
+
+    sleep(randFloat(0.5, 1));
+
+    res = http.get(`${BASE_URL}/cart/checkout`, params);
+    cart5xxRate.add(res.status >= 500);
+    checkoutAttempts.add(1);
+    check(res, { 'checkout: not 5xx': (r) => r.status < 500 });
+
+    sleep(randFloat(1, 2));
+
+    http.get(`${BASE_URL}/auth/logout`, params);
+    sleep(1);
+}
+
+// ─── Scenario 2: Chaos cart events (inject named error logs into Loki) ───
+export function chaosCartEvents() {
+    const events = [
+        { level: 'ERROR', category: 'cart_checkout', event: 'cart.add.5xx_spike',    message: 'Add-to-cart returning 500 — v3 FAIL_MODE=cart active' },
+        { level: 'ERROR', category: 'cart_checkout', event: 'cart.checkout.failed',  message: 'Checkout rejected by failure injection on v3' },
+        { level: 'WARN',  category: 'cart_checkout', event: 'cart.canary.degraded',  message: 'Canary v3 cart routes degraded — rollback may trigger' },
+        { level: 'WARN',  category: 'system',        event: 'cart.service.blocked',  message: 'Cart operations blocked by FAIL_MODE on v3 pod' },
+        { level: 'ERROR', category: 'system',        event: 'canary.error_rate.high', message: 'Error rate on v3 above threshold — canary controller evaluating rollback' },
+    ];
+
+    const e = events[Math.floor(Math.random() * events.length)];
+    // NOTE: /chaos/log at root — /cart/chaos/log would be intercepted by
+    // failureInjectionMiddleware on v3 and return 500 before chaos runs.
+    http.get(
+        `${BASE_URL}/chaos/log?level=${e.level}&category=${e.category}&event=${encodeURIComponent(e.event)}&message=${encodeURIComponent(e.message)}`
+    );
+
+    sleep(randFloat(0.1, 0.5));
+}
+
+export function handleSummary(data) {
+    const rate5xx  = total5xx / Math.max(total2xx + total5xx, 1);
+    const cartRate = cart5xx  / Math.max(cartOk + cart5xx, 1);
+    console.log(`
+=== CANARY v3 CART TEST SUMMARY (with chaos) ===
+Auth:
+  Healthy -> 2xx    : ${total2xx}
+  (auth should be fine on v3)
+
+Cart:
+  OK      -> 2xx    : ${cartOk}
+  Broken  -> 500 v3 : ${cart5xx}
+  cart_5xx_rate     : ${(cartRate*100).toFixed(1)}%  (expect ~50% if canary-weight=50 + FAIL_MODE=cart)
+
+Overall 5xx rate    : ${(rate5xx*100).toFixed(1)}%
+
+--- Grafana / Loki queries ---
+  {app="trendtrove-app-v3", level="ERROR"}
+  {service="app-service-v3"} | json | event=~"cart.*"
+  rate(http_requests_total{status_code=~"5..",service="app-service-v3"}[1m])
+===================================
+`);
+    return {};
+}

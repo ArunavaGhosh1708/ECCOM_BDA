@@ -5,7 +5,7 @@
  * Run with:  k6 run k6/canary-auth-test.js
  *
  * What this does:
- *  - Hammers /auth routes so the ~80% canary weight sends enough traffic to v2
+ *  - Hammers /auth routes so the ~50% canary weight sends enough traffic to v2
  *  - Runs valid signup→login flows (these 500 on v2, succeed on v1)
  *  - Runs bad-credential attempts (reveal the difference between v2 broken 500
  *    vs v1 proper 302-to-login redirect)
@@ -39,7 +39,7 @@ const authLatency     = new Trend('auth_latency_ms', true);
 // ── Scenarios ─────────────────────────────────────────────────────────────────
 export const options = {
     scenarios: {
-        // Ramps up valid user flows through /auth — ~80% will hit v2 and get 500
+        // Ramps up valid user flows through /auth — ~50% will hit v2 and get 500
         valid_auth_flow: {
             executor: 'ramping-vus',
             startVUs: 0,
@@ -57,10 +57,10 @@ export const options = {
         // v2 → 500 (broken)
         bad_credentials: {
             executor: 'constant-arrival-rate',
-            rate: 10,
+            rate: 20,
             timeUnit: '1s',
             duration: '3m',
-            preAllocatedVUs: 15,
+            preAllocatedVUs: 25,
             exec: 'badCredentials',
             tags: { scenario: 'bad_creds' },
         },
@@ -85,7 +85,7 @@ export const options = {
         // These are intentionally loose — v2 is broken, we expect failures
         http_req_duration:   ['p(95)<5000'],
         // Alert if MORE than 95% of ALL auth requests are 5xx
-        // (should hover around 80% — the canary weight — since v2 fails every /auth request)
+        // (should hover around 50% — the canary weight — since v2 fails every /auth request)
         auth_5xx_rate:       ['rate<0.95'],
     },
 };
@@ -304,14 +304,14 @@ export function handleSummary(data) {
     const p95Latency  = m['auth_latency_ms']        ? m['auth_latency_ms'].values['p(95)']  : 0;
     const totalReqs   = m['http_reqs']              ? m['http_reqs'].values.count            : 0;
 
-    const canaryHitEstimate = Math.round(total5xx + totalRedir + totalOk) * 0.8;
+    const canaryHitEstimate = Math.round(total5xx + totalRedir + totalOk) * 0.1;
 
     const summary = `
 ╔══════════════════════════════════════════════════════════╗
 ║           CANARY v2 AUTH TEST — SUMMARY                 ║
 ╠══════════════════════════════════════════════════════════╣
 ║  Total HTTP requests sent       : ${String(totalReqs).padEnd(20)}   ║
-║  Estimated v2 canary hits (~80%): ${String(Math.round(canaryHitEstimate)).padEnd(20)}   ║
+║  Estimated v2 canary hits (~10%): ${String(Math.round(canaryHitEstimate)).padEnd(20)}   ║
 ╠══════════════════════════════════════════════════════════╣
 ║  LOGIN RESULTS                                          ║
 ║    Success (200/302 v1 or v2)   : ${String(totalOk).padEnd(20)}   ║
