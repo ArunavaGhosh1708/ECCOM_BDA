@@ -39,25 +39,6 @@ spec:
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: trendtrove-app-v3
-  namespace: ecommerce
-  labels:
-    release: prometheus
-spec:
-  selector:
-    matchLabels:
-      app: trendtrove-app-v3
-  namespaceSelector:
-    matchNames:
-      - default
-  endpoints:
-    - port: http
-      path: /metrics
-      interval: 30s
----
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
   name: trendtrove-auth
   namespace: ecommerce
   labels:
