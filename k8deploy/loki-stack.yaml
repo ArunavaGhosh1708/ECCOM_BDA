@@ -24,6 +24,8 @@ metadata:
     app: loki
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: loki
@@ -100,6 +102,12 @@ data:
     limits_config:
       reject_old_samples: true
       reject_old_samples_max_age: 168h
+      max_query_parallelism: 32
+      split_queries_by_interval: 15m
+      max_entries_limit_per_query: 10000
+
+    query_scheduler:
+      max_outstanding_requests_per_tenant: 2048
 
     compactor:
       working_directory: /loki/compactor
